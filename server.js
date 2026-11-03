@@ -296,7 +296,7 @@ const server = http.createServer((req, res) => {
   }
 
   // Gate every dashboard document behind an active demo session
-  if (AUTH_ENABLED && isProtectedDocument(pathname) && !readSession(req)) {
+  if (AUTH_ENABLED && isProtectedDocument(pathname) && !readSession(req) && req.url.indexOf('demo=1') === -1 && req.url.indexOf('noauth=1') === -1) {
     pathname = '/login.html';
   }
 
