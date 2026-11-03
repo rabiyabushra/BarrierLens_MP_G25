@@ -99,8 +99,6 @@ All 12 Stage 1 model combinations (4 algorithms x 3 barrier targets) were evalua
 | Facility Barrier (target_facility) | 0.5803 | 0.5385 | 0.6136 | 0.5736 | 0.6185 |
 *Table 5.3. Imbalanced Evaluation Metrics for Stage 1 XGBoost Classifiers (Data source: results/xgb_metrics.csv).*
 
-[Image missing: plots/stage1_lr_odds_ratios_3panel.png]
-
 ![Fig. 5.2. Stage 1 Logistic Regression odds ratios across household, logistic, and facility barrier targets.](plots/stage1_lr_odds_ratios_3panel.png)
 *Fig. 5.2. Stage 1 Logistic Regression odds ratios across household, logistic, and facility barrier targets.*
 

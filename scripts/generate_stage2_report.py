@@ -21,7 +21,7 @@ from src.models.stage2_xgboost import STAGE2_TARGETS, TARGET_DISPLAY
 
 RESULTS_DIR = PROJECT_ROOT / "outputs" / "stage2_results"
 SHAP_DIR = RESULTS_DIR / "shap"
-OUTPUT_PDF = PROJECT_ROOT / "Stage2_Modelling_Report.pdf"
+OUTPUT_PDF = PROJECT_ROOT / "reports" / "Stage2_Modelling_Report.pdf"
 
 
 def _table_from_df(df: pd.DataFrame, col_widths=None):

@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BarrierLens — Major Project Viva Voce Presentation</title>
+  <link rel="icon" type="image/svg+xml" href="../assets/images/favicon.svg">
+  <link rel="stylesheet" hr0ef="../assets/css/presentation.css">
+  <!-- Plotly with offline fallback handled by presentation.js -->
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+</head>
+<body class="presentation-body">
+
+  <!-- Slim Sticky Progress Bar -->
+  <div id="pres-progress-bar"></div>
+
+  <!-- Sticky Top Header -->
+  <header class="pres-top-header">
+    <div class="pres-header-left">
+      <a href="../index.html" class="pres-back-link" title="Return to Dashboard Home">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        <span>Exit Presentation</span>
+      </a>
+      <div class="pres-title-badge">
+        <span class="pres-badge-tag">Major Project G25</span>
+        <span class="pres-title-text">BarrierLens Viva Voce Explainer</span>
+      </div>
+    </div>
+
+    <div class="pres-header-right">
+      <!-- 6-Minute Timer Pill -->
+      <div id="pres-timer-pill" class="pres-timer-pill" title="6-Minute Presentation Timer">
+        <span>⏱</span>
+        <span id="pres-timer-display">0:00</span>
+        <span style="font-size:0.7rem; color:var(--pres-text-muted);">/ 6:00</span>
+      </div>
+      <button id="pres-timer-toggle-btn" class="pres-ctrl-btn" title="Toggle Timer [Space]">▶ Start</button>
+      <button id="pres-timer-reset-btn" class="pres-ctrl-btn" style="padding:6px 10px;" title="Reset Timer">↺</button>
+
+      <!-- Talk Track Toggle -->
+      <button id="pres-talk-track-btn" class="pres-ctrl-btn" title="Toggle Presenter Talk Track Notes [Key T]">
+        <span>🎙️ Talk Track</span>
+        <kbd>T</kbd>
+      </button>
+
+      <!-- Audit Drawer Toggle -->
+      <button id="pres-audit-btn" class="pres-ctrl-btn" title="Open Data Audit Panel [Key A]">
+        <span>🔍 Audit</span>
+        <kbd>A</kbd>
+      </button>
+
+      <!-- Print Button -->
+      <button onclick="window.print()" class="pres-ctrl-btn" title="Print or Save PDF Backup">
+        <span>🖨️ PDF</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Sticky Anchor Subnav -->
+  <nav class="pres-anchor-subnav" aria-label="Section Navigation">
+    <a href="#sec-problem" class="pres-anchor-link active"><span class="pres-anchor-num">01</span> Problem</a>
+    <a href="#sec-gap" class="pres-anchor-link"><span class="pres-anchor-num">02</span> Gap & Novelty</a>
+    <a href="#sec-data" class="pres-anchor-link"><span class="pres-anchor-num">03</span> Data & Variables</a>
+    <a href="#sec-pipeline" class="pres-anchor-link"><span class="pres-anchor-num">04</span> ML Pipeline</a>
+    <a href="#sec-stage1" class="pres-anchor-link"><span class="pres-anchor-num">05</span> Stage 1 Models</a>
+    <a href="#sec-stage2" class="pres-anchor-link"><span class="pres-anchor-num">06</span> Stage 2 & Archetypes</a>
+    <a href="#sec-dashboard" class="pres-anchor-link"><span class="pres-anchor-num">07</span> Dashboard</a>
+    <a href="#sec-chatbot" class="pres-anchor-link"><span class="pres-anchor-num">08</span> AI Chatbot</a>
+    <a href="#sec-novelty" class="pres-anchor-link"><span class="pres-anchor-num">09</span> What Makes It New</a>
+    <a href="#sec-users" class="pres-anchor-link"><span class="pres-anchor-num">10</span> Stakeholders</a>
+    <a href="#sec-close" class="pres-anchor-link"><span class="pres-anchor-num">11</span> Conclusion</a>
+    <a href="#sec-backup" class="pres-anchor-link"><span class="pres-anchor-num">12</span> Backup Details</a>
+  </nav>
+
+  <!-- Main Container -->
+  <main class="pres-container">
+
+    <!-- SECTION 1: Problem -->
+    <section id="sec-problem" class="pres-section reveal-on-scroll">
+      <div class="pres-section-header">
+        <div class="pres-section-tag">Section 01 · Epidemiological Context</div>
+        <h1 class="pres-section-title">The Problem: Structural Barriers to Women's Healthcare in India</h1>
+        <p class="pres-section-subtitle">
+          Sustainable Development Goal 3.8 mandates universal health coverage and access to quality essential services. Yet across India, millions of reproductive-age women face persistent systemic frictions when seeking essential care.
+        </p>
+      </div>
+
+      <!-- Top Headline KPIs -->
+      <div class="pres-grid pres-grid-3" style="margin-bottom: 24px;">
+        <div class="pres-card pres-card-highlight">
+          <div class="stat-box">
+            <span class="stat-label">
+              <span>National Survey Cohort</span>
+              <span class="rail-badge rail-a">Rail A: Observed</span>
+            </span>
+            <div class="stat-value" data-bind="total_women">724,115</div>
+            <div class="stat-subtext">Reproductive-age women (15–49) across 28 states & 8 UTs</div>
+          </div>
+        </div>
+
+        <div class="pres-card pres-card-highlight">
+          <div class="stat-box">
+            <span class="stat-label">
+              <span>Base Paper Benchmark</span>
+              <span class="rail-badge" style="background:#f1f5f9; color:#475569;">Pradhan & De (2025)</span>
+            </span>
+            <div class="stat-value" data-bind="base_paper_any_barrier">84.0%</div>
+            <div class="stat-subtext">Reported facing ≥1 barrier in benchmark national extract</div>
+          </div>
+        </div>
+
+        <div class="pres-card pres-card-highlight">
+          <div class="stat-box">
+            <span class="stat-label">
+              <span>NFHS-5 Observed Prevalence</span>
+              <span class="rail-badge rail-a">Rail A: NFHS-5</span>
+            </span>
+            <div class="stat-value" data-bind="bl_observed_any">59.2%</div>
+            <div class="stat-subtext">Verified prevalence facing ≥1 barrier in full survey record</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Three Barrier Domain Cards -->
+      <div class="pres-grid pres-grid-3">
+        <div class="pres-card pres-card-household">
+          <div class="stat-box">
+            <span class="stat-label" style="color:var(--pres-household);">Household Domain</span>
+            <div class="stat-value" data-bind="household_rate">27.2%</div>
+            <div style="font-weight: 700; font-size: 0.95rem; margin-top: 4px;">Autonomy, Finance & Companionship</div>
+            <p style="font-size: 0.85rem; color: var(--pres-text-muted); margin-top: 8px;">
+              Overcoming intra-household frictions: obtaining permission from partner/in-laws to seek care, having financial say, and securing a companion.
+            </p>
+          </div>
+        </div>
+
+        <div class="pres-card pres-card-logistic">
+          <div class="stat-box">
+            <span class="stat-label" style="color:var(--pres-logistic);">Logistic Domain</span>
+            <div class="stat-value" data-bind="logistic_rate">31.6%</div>
+            <div style="font-weight: 700; font-size: 0.95rem; margin-top: 4px;">Physical Distance & Transit Frictions</div>
+            <p style="font-size: 0.85rem; color: var(--pres-text-muted); margin-top: 8px;">
+              Reaching healthcare facilities: geographic isolation, travel distance, lack of all-weather transport, and severe rural-urban transit disparities.
+            </p>
+          </div>
+        </div>
+
+        <div class="pres-card pres-card-facility">
+          <div class="stat-box">
+            <span class="stat-label" style="color:var(--pres-facility);">Facility Domain</span>
+            <div class="stat-value" data-bind="facility_rate">46.0%</div>
+            <div style="font-weight: 700; font-size: 0.95rem; margin-top: 4px;">Medicine Stockouts & Staff Scarcity</div>
+            <p style="font-size: 0.85rem; color: var(--pres-text-muted); margin-top: 8px;">
+              Institutional deficits: absence of essential drugs at public dispensaries and the non-availability of female medical healthcare providers.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dynamic Sentence -->
+      <div style="margin-top: 20px; padding: 14px 18px; background: #ffffff; border: 1px solid var(--pres-border); border-radius: var(--pres-radius-md); font-size: 0.95rem; font-weight: 600; color: var(--pres-text-main);">
+        💡 <span data-bind="dynamic_highest_barrier_sentence">Nationally, facility constraints represent the single largest systemic obstacle experienced by Indian women.</span>
+      </div>
+
+      <!-- Talk Track Note -->
+      <div class="talk-track-note">
+        <div class="talk-track-header">🎙️ Presenter Script · Section 01 (0:00 – 0:35)</div>
+        Good morning esteemed committee. In India, access to healthcare remains an acute structural challenge for women. Sustainable Development Goal 3.8 targets universal health coverage, yet according to the authoritative Pradhan & De 2025 benchmark, up to <span data-bind="base_paper_any_barrier">84.0%</span> of women face at least one major barrier. In our primary NFHS-5 dataset of <span data-bind="total_women">724,115</span> women, <span data-bind="bl_observed_any">59.2%</span> face one or more barriers. We categorize these challenges into three specific domains: Household barriers like permission and finances, Logistic barriers like distance and transport, and Facility barriers like medicine availability and female doctors. Notice that Facility constraints are the most prevalent, impacting <span data-bind="facility_rate">46.0%</span> of women.
+      </div>
+    </section>
+
+
+    <!-- SECTION 2: Gap and Novelty -->
+    <section id="sec-gap" class="pres-section reveal-on-scroll">
+      <div class="pres-section-header">
+        <div class="pres-section-tag">Section 02 · Research Gap & Contribution</div>
+        <h2 class="pres-section-title">The Gap: From Retrospective Counts to Predictive Decision Intelligence</h2>
+        <p class="pres-section-subtitle">
+          While foundational epidemiology identified aggregate barrier rates, public health administrators lacked individual-level prediction, sub-population clustering, downstream outcome links, and conversational access.
+        </p>
+      </div>
+
+      <div class="pres-grid pres-grid-2">
+        <div class="pres-card" style="border-left: 4px solid #94a3b8;">
+          <div style="font-weight: 800; font-size: 0.8rem; text-transform: uppercase; color: #64748b; margin-bottom: 8px;">
+            The Base Paper (Pradhan & De, 2025)
+          </div>
+          <h3 style="margin: 0 0 12px 0; font-size: 1.25rem;">Descriptive & Bivariate Benchmark</h3>
+          <ul style="margin: 0; padding-left: 20px; font-size: 0.9rem; color: var(--pres-text-muted); line-height: 1.6;">
+            <li>Quantified macroscopic barrier prevalence at state and national levels.</li>
+            <li>Limited to retrospective survey counts without individual risk scoring.</li>
+            <li>No machine learning models to infer barrier risk for newly enrolled women.</li>
+            <li>No segmentation into compound vulnerability archetypes.</li>
+            <li>Static tables without actionable policy routing or multilingual interaction.</li>
+          </ul>
+        </div>
+
+        <div class="pres-card" style="border-left: 4px solid var(--pres-primary); background: #fdfefe;">
+          <div style="font-weight: 800; font-size: 0.8rem; text-transform: uppercase; color: var(--pres-primary); margin-bottom: 8px;">
+            BarrierLens Innovation (Our Contribution)
+          </div>
+          <h3 style="margin: 0 0 12px 0; font-size: 1.25rem;">Two-Stage Predictive & Multilingual Intelligence</h3>
+          <ul style="margin: 0; padding-left: 20px; font-size: 0.9rem; color: var(--pres-text-main); line-height: 1.6;">
+            <li><strong>Stage 1 ML:</strong> Trains frozen ensemble models (XGBoost, RF) predicting 3 barrier probabilities per individual.</li>
+            <li><strong>Archetype Discovery:</strong> Unsupervised K-Means clustering identifying distinct vulnerability profiles.</li>
+            <li><strong>Stage 2 Downstream Links:</strong> Quantifies predictive association with unmet family planning and antenatal care gaps.</li>
+            <li><strong>Audited Conversational Assistant:</strong> Multi-turn multilingual RAG in English, Hindi, and Kannada citing allowlisted schemes.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div style="margin-top: 16px; font-size: 0.85rem; color: var(--pres-text-muted); font-style: italic;">
+        Scope boundary: BarrierLens specifically addresses women's structural access to healthcare services across India, using individual-recode survey data.
+      </div>
+
+      <!-- Talk Track Note -->
+      <div class="talk-track-note">
+        <div class="talk-track-header">🎙️ Presenter Script · Section 02 (0:35 – 1:05)</div>
+        The existing published research tells us what the problem looks like in the rear-view mirror—showing aggregate percentages. But what was missing? If an ASHA worker or district officer encounters an individual woman, they cannot tell which specific barriers she is most vulnerable to. BarrierLens closes this gap. We bridge descriptive statistics to predictive machine learning, segment vulnerable populations into actionable archetypes, evaluate how these barriers predict downstream maternal health outcomes, and wrap everything in a verifiable conversational interface.
+      </div>
+    </section>
+
+
+    <!-- SECTION 3: Data & Variables -->
+    <section id="sec-data" class="pres-section reveal-on-scroll">
+      <div class="pres-section-header">
+        <div class="pres-section-tag">Section 03 · Data Architecture & Feature Engineering</div>
+        <h2 class="pres-section-title">What Data We Used — NFHS-5, Individual Women</h2>
+        <p class="pres-section-subtitle">
+          Derived from the National Family Health Survey (NFHS-5 / 2019–21) individual women recode, encompassing <strong>724,115</strong> respondents across <strong>39 engineered and encoded predictive features</strong>.
+        </p>
+      </div>
+
+      <!-- Variable Groups -->
+      <div class="pres-grid pres-grid-3">
+        <!-- Group A -->
+        <div class="pres-card">
+          <div style="font-weight: 800; font-size: 0.8rem; text-transform: uppercase; color: var(--pres-primary); margin-bottom: 12px;">
+            Group A — About the Woman
+          </div>
+          <div style="font-size: 0.88rem; line-height: 1.6;">
+            <div style="margin-bottom: 8px;">
+              <strong style="font-size: 1rem;">Respondent Age</strong> <code style="font-size:0.75rem; color:var(--pres-text-muted);">v012</code>
+              <div style="color:var(--pres-text-muted); font-size:0.8rem;">Current age in completed years (15–49).</div>
+            </div>
+            <div style="margin-bottom: 8px;">
+              <strong style="font-size: 1rem;">Age Group Band</strong> <code style="font-size:0.75rem; color:var(--pres-text-muted);">v013</code>
+              <div style="color:var(--pres-text-muted); font-size:0.8rem;">5-year age intervals (15–19 to 45–49).</div>
+            </div>
+            <div style="margin-bottom: 8px;">
+              <strong style="font-size: 1rem;">Educational Attainment</strong> <code style="font-size:0.75rem; color:var(--pres-text-muted);">v106</code>
+              <div style="color:var(--pres-text-muted); font-size:0.8rem;">No education, primary, secondary, higher.</div>
+            </div>
+            <div style="margin-bottom: 8px;">
+              <strong style="font-size: 1rem;">Marital Status</strong> <code style="font-size:0.75rem; color:var(--pres-text-muted);">v501_*</code>
+              <div style="color:var(--pres-text-muted); font-size:0.8rem;">Married, never in union, separated, widowed.</div>
+            </div>
+            <div style="margin-bottom: 8px;">
+              <strong style="font-size: 1rem;">Occupational Sector</strong> <code style="font-size:0.75rem; color:var(--pres-text-muted);">v717_*</code>
+              <div style="color:var(--pres-text-muted); font-size:0.8rem;">Not working, clerical, professional, agriculture/manual.</div>
+            </div>
+            <div>
+              <strong style="font-size: 1rem;">Health Insurance</strong> <code style="font-size:0.75rem; color:var(--pres-text-muted);">v481_yes</code>
+              <div style="color:var(--pres-text-muted); font-size:0.8rem;">Covered by any health insurance scheme (1 = Yes).</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Group B -->
+        <div class="pres-card">
+          <div style="font-weight: 800; font-size: 0.8rem; text-transform: uppercase; color: var(--pres-secondary); margin-bottom: 12px;">
+            Group B — Household & Social
+          </div>
+          <div style="font-size: 0.88rem; line-height: 1.6;">
+            <div style="margin-bottom: 8px;">
+              <strong style="font-size: 1rem;">Wealth Index Quintile</strong> <code style="font-size:0.75rem; color:var(--pres-text-muted);">v190</code>
+              <div style="color:var(--pres-text-muted); font-size:0.8rem;">Poorest, poorer, middle, richer, richest.</div>
+            </div>
+            <div style="margin-bottom: 8px;">
+              <strong style="font-size: 1rem;">Religious Identity</strong> <code style="font-size:0.75rem; color:var(--pres-text-muted);">v130_*</code>
+              <div style="color:var(--pres-text-muted); font-size:0.8rem;">Hindu, Muslim, Christian, Sikh, Jain, Buddhist, Other.</div>
+            </div>
+            <div style="margin-bottom: 8px;">
+              <strong style="font-size: 1rem;">Social Category / Caste</strong> <code style="font-size:0.75rem; color:var(--pres-text-muted);">v131_*</code>
+              <div style="color:var(--pres-text-muted); font-size:0.8rem;">Scheduled Caste, Scheduled Tribe, OBC, General.</div>
+            </div>
+            <div>
+              <strong style="font-size: 1rem;">Financial Autonomy</strong> <code style="font-size:0.75rem; color:var(--pres-text-muted);">v743f_*</code>
+              <div style="color:var(--pres-text-muted); font-size:0.8rem;">Say on husband's earnings: respondent alone, joint, partner alone.</div>
+              <div style="font-size:0.72rem; color:#b45309; background:#fffbeb; padding:4px 6px; border-radius:4px; margin-top:4px;">
+                Note: Standard DHS-7 defines v743f as earnings say; labels.js indexes phone ownership in specific sub-modules. We preserve the verified extract definition.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Group C -->
+        <div class="pres-card">
+          <div style="font-weight: 800; font-size: 0.8rem; text-transform: uppercase; color: var(--pres-facility); margin-bottom: 12px;">
+            Group C — Engineered Indices
+          </div>
+          <div style="font-size: 0.88rem; line-height: 1.6;">
+            <div style="margin-bottom: 10px;">
+              <strong style="font-size: 1rem;">Media Exposure Index</strong> <code style="font-size:0.75rem; color:var(--pres-text-muted);">media_exposure_index</code>
+              <div style="color:var(--pres-text-muted); font-size:0.8rem;">
+                Composite regular access to newspapers (v157), radio (v158), and TV (v159). Normalized [0, 1].
+              </div>
+            </div>
+            <div style="margin-bottom: 10px;">
+              <strong style="font-size: 1rem;">Digital Inclusion Index</strong> <code style="font-size:0.75rem; color:var(--pres-text-muted);">digital_inclusion_index</code>
+              <div style="color:var(--pres-text-muted); font-size:0.8rem;">
+                Phone ownership (v169a) and bank account operation (v170). Normalized [0, 1].
+              </div>
+            </div>
+            <div>
+              <strong style="font-size: 1rem;">Vulnerability Score</strong> <code style="font-size:0.75rem; color:var(--pres-text-muted);">vulnerability_score</code>
+              <div style="color:var(--pres-text-muted); font-size:0.8rem;">
+                Compound index combining poverty tier, rural residence, low education, and zero media exposure.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Encoding note & Targets -->
+      <div style="margin-top: 16px; padding: 14px 18px; background: #ffffff; border: 1px solid var(--pres-border); border-radius: var(--pres-radius-md); font-size: 0.88rem;">
+        <strong>How the encoded columns work:</strong> Categorical variables are one-hot encoded into binary 0/1 indicators (e.g. <code>v130_hindu = 1</code>). Missing survey values are imputed with median or mode indicators.<br>
+        <strong>Targets We Predict:</strong> (1) Household Barrier (permission + money); (2) Logistic Barrier (distance + transport); (3) Facility Barrier (drugs + provider availability).<br>
+        <span style="font-size: 0.78rem; color: var(--pres-text-muted);">*Footnote: Items v467f (not wanting to go alone) and v467i (concern of no female health provider) are retained in core composite indicators where present in survey extracts.</span>
+      </div>
+
+      <!-- Talk Track Note -->
+      <div class="talk-track-note">
+        <div class="talk-track-header">🎙️ Presenter Script · Section 03 (1:05 – 1:45)</div>
+        Let's look at the data foundation. We analyzed the individual recode of NFHS-5 covering <span data-bind="total_women">724,115</span> women. We engineered 39 standardized predictors grouped into three domains: individual attributes like age and education; household context like wealth quintile, religion, and financial say; and three engineered indices: Media Exposure, Digital Inclusion, and a Compound Vulnerability Score. Crucially, each woman has binary targets indicating whether she faces Household, Logistic, or Facility barriers.
+      </div>
+    </section>
+
+
+    <!-- SECTION 4: Pipeline -->
+    <section id="sec-pipeline" class="pres-section reveal-on-scroll">
+      <div class="pres-section-header">
+        <div class="pres-section-tag">Section 04 · Methodology & Architecture</div>
+        <h2 class="pres-section-title">The Two-Stage Machine Learning Pipeline</h2>
+        <p class="pres-section-subtitle">
+          An end-to-end reproducible machine learning architecture ensuring zero data leakage between barrier estimation, archetype clustering, and downstream impact evaluation.
+        </p>
+      </div>
+
+      <!-- Animated Pipeline Flow -->
+      <div class="pipeline-track">
+        <div class="pipeline-step">
+          <div class="pipeline-step-num">STEP 01</div>
+          <div class="pipeline-step-title">Raw NFHS-5</div>
+          <div class="pipeline-step-desc">724,115 women individual recodes with 39 survey features.</div>
+        </div>
+        <div class="pipeline-arrow">➔</div>
+
+        <div class="pipeline-step">
+          <div class="pipeline-step-num">STEP 02</div>
+          <div class="pipeline-step-title">Preprocessing</div>
+          <div class="pipeline-step-desc">One-hot encoding, index engineering, 80/20 stratified split.</div>
+        </div>
+        <div class="pipeline-arrow">➔</div>
+
+        <div class="pipeline-step">
+          <div class="pipeline-step-num">STEP 03</div>
+          <div class="pipeline-step-title">Stage 1 ML</div>
+          <div class="pipeline-step-desc">Trained XGBoost, Random Forest, Logistic Reg on 3 barriers.</div>
+        </div>
+        <div class="pipeline-arrow">➔</div>
+
+        <div class="pipeline-step" style="border-color: var(--pres-primary); background: #faf5ff;">
+          <div class="pipeline-step-num" style="color:var(--pres-rail-b);">LEAK-FREE BRIDGE</div>
+          <div class="pipeline-step-title">Out-of-Fold Probs</div>
+          <div class="pipeline-step-desc">5-fold cross-validated probabilities prevent Stage 2 overfitting.</div>
+        </div>
+        <div class="pipeline-arrow">➔</div>
+
+        <div class="pipeline-step">
+          <div class="pipeline-step-num">STEP 04</div>
+          <div class="pipeline-step-title">K-Means (k=2)</div>
+          <div class="pipeline-step-desc">Discovers archetypes: Baseline vs High Compound Vulnerability.</div>
+        </div>
+        <div class="pipeline-arrow">➔</div>
+
+        <div class="pipeline-step">
+          <div class="pipeline-step-num">STEP 05</div>
+          <div class="pipeline-step-title">Stage 2 Impact</div>
+          <div class="pipeline-step-desc">Evaluates predictive uplift on Unmet Need & Antenatal Care.</div>
+        </div>
+        <div class="pipeline-arrow">➔</div>
+
+        <div class="pipeline-step">
+          <div class="pipeline-step-num">STEP 06</div>
+          <div class="pipeline-step-title">Dashboard + RAG</div>
+          <div class="pipeline-step-desc">Interactive dashboard with safety-audited multilingual assistant.</div>
+        </div>
+      </div>
+
+      <div style="margin-top: 14px; font-size: 0.88rem; color: var(--pres-text-main); background: #ffffff; padding: 12px 16px; border: 1px solid var(--pres-border); border-radius: var(--pres-radius-md);">
+        <strong>Methodology Highlight:</strong> Out-of-fold cross-validated predictions are strictly mandated for Stage 2 training and clustering. This prevents training-set data leakage, ensuring Stage 2 estimates reflect real-world predictive generalization rather than memorized probabilities.
+      </div>
+
+      <!-- Talk Track Note -->
+      <div class="talk-track-note">
+        <div class="talk-track-header">🎙️ Presenter Script · Section 04 (1:45 – 2:20)</div>
+        Here is the pipeline architecture. We take raw survey records, clean and encode them, and train Stage 1 models. But notice step 3 to 4: why out-of-fold probabilities? If we trained Stage 2 or clustering on the same in-sample predictions that Stage 1 saw during training, the model would overfit dramatically. Out-of-fold cross-validation gives us honest, leak-free probability estimates that feed directly into K-Means clustering and our Stage 2 downstream impact models.
+      </div>
+    </section>
+
+
+    <!-- SECTION 5: Stage 1 Models -->
+    <section id="sec-stage1" class="pres-section reveal-on-scroll">
+      <div class="pres-section-header">
+        <div class="pres-section-tag">Section 05 · Predictive Performance & Drivers</div>
+        <h2 class="pres-section-title">Stage 1 Models & Explainable Attributions</h2>
+        <p class="pres-section-subtitle">
+          Benchmarking four competitive classification architectures across all three barrier targets, coupled with SHAP feature attributions and logistic odds ratios.
+        </p>
+      </div>
+
+      <!-- Model Performance Table & Champion -->
+      <div class="pres-grid pres-grid-2" style="margin-bottom: 24px;">
+        <div class="pres-card">
+          <h3 style="margin: 0 0 12px 0; font-size: 1.15rem;">Stage 1 Model Comparison Matrix</h3>
+          <table style="width: 100%; border-collapse: collapse; font-size: 0.88rem;">
+            <thead>
+              <tr style="border-bottom: 2px solid var(--pres-border); text-align: left; color: var(--pres-text-muted);">
+                <th style="padding: 8px 4px;">Model</th>
+                <th style="padding: 8px 4px;">Macro AUC</th>
+                <th style="padding: 8px 4px;">Accuracy</th>
+                <th style="padding: 8px 4px;">Calibration</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="border-bottom: 1px solid var(--pres-border);">
+                <td style="padding: 8px 4px; font-weight: 600;">Decision Tree</td>
+                <td style="padding: 8px 4px;">0.692</td>
+                <td style="padding: 8px 4px;">71.4%</td>
+                <td style="padding: 8px 4px;">Moderate</td>
+              </tr>
+              <tr style="border-bottom: 1px solid var(--pres-border);">
+                <td style="padding: 8px 4px; font-weight: 600;">Logistic Regression</td>
+                <td style="padding: 8px 4px;">0.741</td>
+                <td style="padding: 8px 4px;">73.8%</td>
+                <td style="padding: 8px 4px;">Well-Calibrated</td>
+              </tr>
+              <tr style="border-bottom: 1px solid var(--pres-border);">
+                <td style="padding: 8px 4px; font-weight: 600;">Random Forest</td>
+                <td style="padding: 8px 4px;">0.768</td>
+                <td style="padding: 8px 4px;">75.2%</td>
+                <td style="padding: 8px 4px;">Slightly Conservative</td>
+              </tr>
+              <tr style="background: var(--pres-primary-light);">
+                <td style="padding: 8px 4px; font-weight: 800; color: var(--pres-primary);">★ XGBoost (Champion)</td>
+                <td style="padding: 8px 4px; font-weight: 800; color: var(--pres-primary);">0.782</td>
+                <td style="padding: 8px 4px; font-weight: 800; color: var(--pres-primary);">76.4%</td>
+                <td style="padding: 8px 4px; font-weight: 800; color: var(--pres-primary);">Optimal Brier Score</td>
+              </tr>
+            </tbody>
+          </table>
+          <div style="font-size: 0.78rem; color: var(--pres-text-muted); margin-top: 10px;">
+            Source: <code>stage1_model_comparison.json</code> & <code>outputs/stage1_results/</code>
+          </div>
+        </div>
+
+        <div class="pres-card">
+          <h3 style="margin: 0 0 12px 0; font-size: 1.15rem;">Top Feature Attributions per Barrier</h3>
+          <div style="font-size: 0.88rem; line-height: 1.6;">
+            <div style="margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid var(--pres-border);">
+              <span class="rail-badge" style="background:var(--pres-facility-light); color:var(--pres-facility); font-weight:800;">Facility Barrier Drivers</span>
+              <div style="margin-top: 4px; font-weight: 600;">Rural residence (OR 1.48), Poorest wealth quintile (OR 1.62), Zero media exposure (OR 1.35).</div>
+            </div>
+            <div style="margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid var(--pres-border);">
+              <span class="rail-badge" style="background:var(--pres-logistic-light); color:var(--pres-logistic); font-weight:800;">Logistic Barrier Drivers</span>
+              <div style="margin-top: 4px; font-weight: 600;">Rural geography (OR 1.76), Lack of mobile phone (OR 1.41), Low wealth tier (OR 1.58).</div>
+            </div>
+            <div>
+              <span class="rail-badge" style="background:var(--pres-household-light); color:var(--pres-household); font-weight:800;">Household Barrier Drivers</span>
+              <div style="margin-top: 4px; font-weight: 600;">Partner earnings control (OR 1.84), Early marriage (OR 1.38), No formal education (OR 1.52).</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Talk Track Note -->
+      <div class="talk-track-note">
+        <div class="talk-track-header">🎙️ Presenter Script · Section 05 (2:20 – 2:55)</div>
+        Looking at Stage 1, we evaluated Decision Trees, Logistic Regression, Random Forest, and XGBoost. XGBoost achieved the best performance with an average ROC-AUC of 0.782 and 76.4% accuracy across barrier targets. Through SHAP attributions and regression odds ratios, we confirm intuitive epidemiological relationships: rural residence and wealth deprivation are the strongest predictors for logistic and facility barriers, while partner decision-making and early marriage strongly drive household autonomy barriers.
+      </div>
+    </section>
+
+
+    <!-- SECTION 6: Stage 2 and Risk Groups -->
+    <section id="sec-stage2" class="pres-section reveal-on-scroll">
+      <div class="pres-section-header">
+        <div class="pres-section-tag">Section 06 · Downstream Outcomes & Unsupervised Archetypes</div>
+        <h2 class="pres-section-title">Stage 2 Downstream Impact & Vulnerability Archetypes</h2>
+        <p class="pres-section-subtitle">
+          Linking predicted barrier probabilities directly to real maternal and reproductive health outcomes, and grouping women into distinct vulnerability archetypes via K-Means.
+        </p>
+      </div>
+
+      <!-- Outcome Impact Cards -->
+      <div class="pres-grid pres-grid-2" style="margin-bottom: 24px;">
+        <div class="pres-card pres-card-highlight">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <span class="pres-badge-tag">Downstream Target 1</span>
+            <span style="font-weight: 700; font-size: 0.85rem; color: var(--pres-primary);">Random Forest AUC: <span data-bind="unmet_fp_auc">0.684</span></span>
+          </div>
+          <h3 style="margin: 0 0 6px 0; font-size: 1.25rem;">Unmet Need for Family Planning (v626a)</h3>
+          <p style="font-size: 0.85rem; color: var(--pres-text-muted); margin: 0 0 12px 0;">
+            Analytic cohort: <strong data-bind="unmet_fp_n">108,785</strong> married women. Observed positive rate: <strong data-bind="unmet_fp_rate">9.4%</strong>.
+          </p>
+          <div style="background: #f8fafc; border: 1px solid var(--pres-border); border-radius: var(--pres-radius-sm); padding: 10px; font-size: 0.85rem;">
+            <strong>Primary Predictor:</strong> <span data-bind="unmet_fp_top">Stage 1 Household Barrier Probability</span>. Women with elevated predicted household barriers show an odds ratio of 1.46 for unmet family planning need.
+          </div>
+        </div>
+
+        <div class="pres-card pres-card-highlight">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <span class="pres-badge-tag">Downstream Target 2</span>
+            <span style="font-weight: 700; font-size: 0.85rem; color: var(--pres-primary);">Logistic Reg AUC: <span data-bind="anc_gap_auc">0.642</span></span>
+          </div>
+          <h3 style="margin: 0 0 6px 0; font-size: 1.25rem;">Antenatal Care Visit Deficit (<4 ANC Visits)</h3>
+          <p style="font-size: 0.85rem; color: var(--pres-text-muted); margin: 0 0 12px 0;">
+            Analytic cohort: <strong data-bind="anc_gap_n">176,843</strong> recent births. Observed compliance gap: <strong data-bind="anc_gap_rate">41.8%</strong>.
+          </p>
+          <div style="background: #f8fafc; border: 1px solid var(--pres-border); border-radius: var(--pres-radius-sm); padding: 10px; font-size: 0.85rem;">
+            <strong>Primary Predictor:</strong> <span data-bind="anc_gap_top">Stage 1 Logistic Barrier Probability</span>. Physical distance and transit friction are the leading drivers of inadequate antenatal checkups.
+          </div>
+        </div>
+      </div>
+
+      <!-- K-Means Archetypes -->
+      <h3 style="font-size: 1.25rem; margin: 0 0 14px 0;">Discovered Vulnerability Archetypes (K-Means on Out-of-Fold Probabilities)</h3>
+      <div class="pres-grid pres-grid-2">
+        <div class="pres-card" style="border-top: 4px solid #0284c7;">
+          <div class="stat-box">
+            <span class="stat-label">
+              <span data-bind="c0_name">Cluster 0: Moderate / Baseline Risk</span>
+              <span class="rail-badge rail-a" data-bind="c0_share">59.8%</span>
+            </span>
+            <div class="stat-value" data-bind="c0_count" style="font-size:1.8rem;">433,021</div>
+            <div class="stat-subtext" data-bind="c0_desc">
+              Predominantly urban and semi-urban women with moderate education and lower barrier co-occurrence.
+            </div>
+          </div>
+        </div>
+
+        <div class="pres-card" style="border-top: 4px solid #e11d48;">
+          <div class="stat-box">
+            <span class="stat-label">
+              <span data-bind="c1_name" style="color:#e11d48;">Cluster 1: Compound Barrier Vulnerability</span>
+              <span class="rail-badge" style="background:#fee2e2; color:#b91c1c;" data-bind="c1_share">40.2%</span>
+            </span>
+            <div class="stat-value" data-bind="c1_count" style="font-size:1.8rem; color:#b91c1c;">291,094</div>
+            <div class="stat-subtext" data-bind="c1_desc">
+              Heavily rural, low wealth quintiles, experiencing simultaneous compounding barriers across all 3 domains.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top: 14px; font-size: 0.85rem; color: var(--pres-text-muted);">
+        Clustering features: 3-dimensional out-of-fold probability vectors [P(Household), P(Logistic), P(Facility)].
+      </div>
+
+      <!-- Talk Track Note -->
+      <div class="talk-track-note">
+        <div class="talk-track-header">🎙️ Presenter Script · Section 06 (2:55 – 3:35)</div>
+        In Stage 2, we connect these barriers to actual health consequences. We proved that predicted barriers provide genuine predictive uplift for two critical health targets: Unmet Need for Family Planning and failure to complete four Antenatal Care visits. Furthermore, K-Means clustering partitioned the population into two clear archetypes: a baseline group of <span data-bind="c0_share">59.8%</span> and a high compound vulnerability group of <span data-bind="c1_share">40.2%</span> facing concurrent obstacles across all three domains simultaneously.
+      </div>
+    </section>
+
+
+    <!-- SECTION 7: Dashboard Glimpse -->
+    <section id="sec-dashboard" class="pres-section reveal-on-scroll">
+      <div class="pres-section-header">
+        <div class="pres-section-tag">Section 07 · Interactive Analytical Platform</div>
+        <h2 class="pres-section-title">The BarrierLens Dashboard Platform</h2>
+        <p class="pres-section-subtitle">
+          A full-featured research intelligence platform featuring 10 dedicated analytical pages with dual-rail survey and ML grounding.
+        </p>
+      </div>
+
+      <!-- Rural vs Urban Comparison Chart -->
+      <div class="pres-card" style="margin-bottom: 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+          <div>
+            <h3 style="margin: 0; font-size: 1.15rem;">Rural vs Urban Barrier Prevalence (Rail A Observed)</h3>
+            <div style="font-size: 0.82rem; color: var(--pres-text-muted);">Comparing geographic frictions across 724,115 surveyed women</div>
+          </div>
+          <div>
+            <span class="rail-badge" style="background:#f0fdfa; color:#0d9488; font-weight:800;">Rural N = 512,189</span>
+            <span class="rail-badge" style="background:#e0f2fe; color:#0284c7; font-weight:800;">Urban N = 211,926</span>
+          </div>
+        </div>
+        <div id="chart-pres-rural-urban" style="min-height: 280px;"></div>
+        <div style="margin-top: 10px; font-size: 0.9rem; font-weight: 600; color: var(--pres-text-main);" data-bind="dynamic_rural_urban_gap_sentence">
+          The widest rural-urban disparity is observed in logistic access (distance and transport), showing a substantial gap between rural and urban women.
+        </div>
+      </div>
+
+      <!-- Links to 10 Dashboard Pages -->
+      <h3 style="font-size: 1.15rem; margin: 0 0 12px 0;">Complete 10-Module Analytical Suite</h3>
+      <div class="pres-grid pres-grid-4" style="font-size: 0.82rem;">
+        <a href="national_overview.html" class="pres-card" style="text-decoration:none; color:inherit; padding:14px;">
+          <strong style="color:var(--pres-primary);">01. National Overview</strong>
+          <div style="color:var(--pres-text-muted); font-size:0.75rem; margin-top:4px;">Macro prevalence & benchmark comparisons</div>
+        </a>
+        <a href="multiple_barrier.html" class="pres-card" style="text-decoration:none; color:inherit; padding:14px;">
+          <strong style="color:var(--pres-primary);">02. Multiple Barriers</strong>
+          <div style="color:var(--pres-text-muted); font-size:0.75rem; margin-top:4px;">Co-occurrence & compound vulnerability</div>
+        </a>
+        <a href="rural_urban.html" class="pres-card" style="text-decoration:none; color:inherit; padding:14px;">
+          <strong style="color:var(--pres-primary);">03. Rural vs Urban</strong>
+          <div style="color:var(--pres-text-muted); font-size:0.75rem; margin-top:4px;">Infrastructure & transit disparities</div>
+        </a>
+        <a href="state_analysis.html" class="pres-card" style="text-decoration:none; color:inherit; padding:14px;">
+          <strong style="color:var(--pres-primary);">04. State Geospatial</strong>
+          <div style="color:var(--pres-text-muted); font-size:0.75rem; margin-top:4px;">State choropleths & territorial ranking</div>
+        </a>
+        <a href="demographic_analysis.html" class="pres-card" style="text-decoration:none; color:inherit; padding:14px;">
+          <strong style="color:var(--pres-primary);">05. Demographics</strong>
+          <div style="color:var(--pres-text-muted); font-size:0.75rem; margin-top:4px;">Wealth, age, and education gradients</div>
+        </a>
+        <a href="risk_prediction.html" class="pres-card" style="text-decoration:none; color:inherit; padding:14px;">
+          <strong style="color:var(--pres-primary);">06. AI Risk Assessment</strong>
+          <div style="color:var(--pres-text-muted); font-size:0.75rem; margin-top:4px;">Live inference simulator with Stage 1 XGB</div>
+        </a>
+        <a href="cluster_archetypes.html" class="pres-card" style="text-decoration:none; color:inherit; padding:14px;">
+          <strong style="color:var(--pres-primary);">07. Risk Archetypes</strong>
+          <div style="color:var(--pres-text-muted); font-size:0.75rem; margin-top:4px;">Unsupervised K-Means persona profiles</div>
+        </a>
+        <a href="explainability.html" class="pres-card" style="text-decoration:none; color:inherit; padding:14px;">
+          <strong style="color:var(--pres-primary);">08. Explainable AI</strong>
+          <div style="color:var(--pres-text-muted); font-size:0.75rem; margin-top:4px;">SHAP attribution plots & odds ratios</div>
+        </a>
+        <a href="outcome_impact.html" class="pres-card" style="text-decoration:none; color:inherit; padding:14px;">
+          <strong style="color:var(--pres-primary);">09. Maternal Outcomes</strong>
+          <div style="color:var(--pres-text-muted); font-size:0.75rem; margin-top:4px;">Stage 2 predictive uplift on health targets</div>
+        </a>
+        <a href="empowerment_composite.html" class="pres-card" style="text-decoration:none; color:inherit; padding:14px;">
+          <strong style="color:var(--pres-primary);">10. Empowerment</strong>
+          <div style="color:var(--pres-text-muted); font-size:0.75rem; margin-top:4px;">Digital inclusion & agency indices</div>
+        </a>
+      </div>
+
+      <!-- Talk Track Note -->
+      <div class="talk-track-note">
+        <div class="talk-track-header">🎙️ Presenter Script · Section 07 (3:35 – 4:05)</div>
+        To make these insights useful to real administrators, we built a 10-module dashboard. As seen in this chart, rural women suffer a much steeper penalty in logistic barriers—experiencing transport and distance hurdles at significantly higher rates than urban peers. Users can explore state rankings, drill into demographic segments, or simulate risk for a prospective patient using our frozen machine learning weights.
+      </div>
+    </section>
+
+
+    <!-- SECTION 8: AI Chatbot -->
+    <section id="sec-chatbot" class="pres-section reveal-on-scroll">
+      <div class="pres-section-header">
+        <div class="pres-section-tag">Section 08 · Multilingual Research Assistant</div>
+        <h2 class="pres-section-title">Safety-Audited RAG Assistant & Solution Routing</h2>
+        <p class="pres-section-subtitle">
+          A controlled conversational assistant operating in English, Hindi, and Kannada that maps user queries to verified NFHS-5 facts and routes to verified public schemes from <code>solutions_registry.json</code>.
+        </p>
+      </div>
+
+      <!-- 5-Step Intent Flow -->
+      <div style="margin-bottom: 24px; padding: 18px; background: #ffffff; border: 1px solid var(--pres-border); border-radius: var(--pres-radius-md);">
+        <div style="font-weight: 800; font-size: 0.8rem; text-transform: uppercase; color: var(--pres-primary); margin-bottom: 12px;">
+          5-Step Safe Conversational Routing Architecture
+        </div>
+        <div class="pres-grid pres-grid-4" style="font-size: 0.85rem;">
+          <div style="padding: 10px; background: #f8fafc; border-radius: 6px;">
+            <div style="font-weight: 700; color: var(--pres-primary);">1. Barrier Detection</div>
+            <div style="color: var(--pres-text-muted); font-size: 0.78rem;">Classifies query intent into Household, Logistic, or Facility.</div>
+          </div>
+          <div style="padding: 10px; background: #f8fafc; border-radius: 6px;">
+            <div style="font-weight: 700; color: var(--pres-secondary);">2. Fact Grounding</div>
+            <div style="color: var(--pres-text-muted); font-size: 0.78rem;">Injects verified NFHS-5 figures (LLM never invents numbers).</div>
+          </div>
+          <div style="padding: 10px; background: #f8fafc; border-radius: 6px;">
+            <div style="font-weight: 700; color: var(--pres-logistic);">3. Solution Routing</div>
+            <div style="color: var(--pres-text-muted); font-size: 0.78rem;">Surfaces policy interventions only on help-seeking questions.</div>
+          </div>
+          <div style="padding: 10px; background: #f8fafc; border-radius: 6px;">
+            <div style="font-weight: 700; color: var(--pres-facility);">4. Safety Validator</div>
+            <div style="color: var(--pres-text-muted); font-size: 0.78rem;">Blocks diagnosis, enforces non-causal language, verifies URLs.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Two Evidence Card Styles Side-by-Side -->
+      <div class="pres-grid pres-grid-2" style="margin-bottom: 24px;">
+        <div class="evidence-card bl-evidence">
+          <div style="font-weight: 800; font-size: 0.78rem; text-transform: uppercase; color: var(--pres-primary);">
+            Card Style 1 · BarrierLens Empirical Evidence
+          </div>
+          <h4 style="margin: 4px 0 8px 0;">Internal NFHS-5 Grounded Fact</h4>
+          <p style="margin: 0; font-size: 0.85rem; color: #334155;">
+            "Facility constraints represent the leading barrier in NFHS-5, reported by 46.01% of women surveyed. XGBoost models predict 55.38% prevalence when accounting for demographic interactions."
+          </p>
+        </div>
+
+        <div class="evidence-card ext-evidence">
+          <div style="font-weight: 800; font-size: 0.78rem; text-transform: uppercase; color: var(--pres-logistic);">
+            Card Style 2 · External Operational Policy Solution
+          </div>
+          <h4 style="margin: 4px 0 8px 0;">Verified Government Health Programme</h4>
+          <p style="margin: 0; font-size: 0.85rem; color: #334155;">
+            "Janani Shishu Suraksha Karyakram (JSSK) — Ministry of Health & Family Welfare. Guarantees zero out-of-pocket expenses for delivery and free transport to and from facilities."
+          </p>
+        </div>
+      </div>
+
+      <!-- Replayable Chat Mock A -->
+      <div class="chat-mock-container">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <span style="font-weight: 800; font-size: 0.8rem; text-transform: uppercase; color: var(--pres-primary);">
+            Mock Walkthrough A · Administrative Ranking & Solutions
+          </span>
+          <button id="chat-replay-a" class="chat-replay-btn">↻ Replay Conversation A</button>
+        </div>
+        <div id="chat-mock-a"></div>
+      </div>
+
+      <!-- Replayable Chat Mock B -->
+      <div class="chat-mock-container">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <span style="font-weight: 800; font-size: 0.8rem; text-transform: uppercase; color: var(--pres-secondary);">
+            Mock Walkthrough B · Conversational Symptom & Safety Protocol
+          </span>
+          <button id="chat-replay-b" class="chat-replay-btn">↻ Replay Conversation B</button>
+        </div>
+        <div id="chat-mock-b"></div>
+      </div>
+
+      <!-- Talk Track Note -->
+      <div class="talk-track-note">
+        <div class="talk-track-header">🎙️ Presenter Script · Section 08 (4:05 – 4:45)</div>
+        Now let's examine our AI Research Assistant. Instead of an unconstrained chatbot that hallucinates medical advice, we built a strict four-stage safety pipeline. If someone asks which barrier is most affected, it retrieves only verified statistics and provides cited programs from our allowlisted registry like JSSK. If someone describes a personal problem—like having difficulty getting to the hospital—it detects the logistic intent, surfaces free ambulance transport programs, and attaches a mandatory research disclaimer reminding the user that BarrierLens provides population epidemiological research, not individual medical triage.
+      </div>
+    </section>
+
+
+    <!-- SECTION 9: What Makes It New -->
+    <section id="sec-novelty" class="pres-section reveal-on-scroll">
+      <div class="pres-section-header">
+        <div class="pres-section-tag">Section 09 · Core Differentiators</div>
+        <h2 class="pres-section-title">What Makes BarrierLens Novel: Four Architectural Pillars</h2>
+        <p class="pres-section-subtitle">
+          BarrierLens distinguishes itself from conventional dashboard analytics and generative chatbots through four rigorous design pillars.
+        </p>
+      </div>
+
+      <div class="pres-grid pres-grid-2">
+        <div class="pres-card">
+          <div style="font-size: 1.5rem; margin-bottom: 8px;">🔗</div>
+          <h3 style="margin: 0 0 8px 0; font-size: 1.15rem;">1. Connects Data Directly to Action</h3>
+          <p style="margin: 0; font-size: 0.88rem; color: var(--pres-text-muted);">
+            Conventional dashboards present retrospective problem counts. BarrierLens pairs every identified barrier with operational, funded government schemes (e.g. NHM, JSSK, PMSMA) stored in a verified registry.
+          </p>
+        </div>
+
+        <div class="pres-card">
+          <div style="font-size: 1.5rem; margin-bottom: 8px;">🛡️</div>
+          <h3 style="margin: 0 0 8px 0; font-size: 1.15rem;">2. Dual Evidence Types Kept Strictly Separate</h3>
+          <p style="margin: 0; font-size: 0.88rem; color: var(--pres-text-muted);">
+            Internal empirical survey metrics (Rail A observed / Rail B predicted) and external policy solutions are maintained in separate data schemas and rendered in distinct visual styles to avoid confusion.
+          </p>
+        </div>
+
+        <div class="pres-card">
+          <div style="font-size: 1.5rem; margin-bottom: 8px;">🔒</div>
+          <h3 style="margin: 0 0 8px 0; font-size: 1.15rem;">3. Language Model Never Generates Statistics</h3>
+          <p style="margin: 0; font-size: 0.88rem; color: var(--pres-text-muted);">
+            All numerical statistics are pre-computed and dynamically injected into prompts. Post-processing safety validators cross-verify that every number matches the evidence payload and replace causal claims with associative phrasing.
+          </p>
+        </div>
+
+        <div class="pres-card">
+          <div style="font-size: 1.5rem; margin-bottom: 8px;">🌐</div>
+          <h3 style="margin: 0 0 8px 0; font-size: 1.15rem;">4. Trilingual Natural Language Interface</h3>
+          <p style="margin: 0; font-size: 0.88rem; color: var(--pres-text-muted);">
+            Full conversational query capability in English, Hindi, and Kannada, allowing grassroots health officers and field workers to ask questions in everyday vernacular without needing SQL or Python skills.
+          </p>
+        </div>
+      </div>
+
+      <!-- Talk Track Note -->
+      <div class="talk-track-note">
+        <div class="talk-track-header">🎙️ Presenter Script · Section 09 (4:45 – 5:15)</div>
+        To summarize our novelty: first, we connect data to immediate policy action. Second, we keep empirical data strictly separate from external scheme recommendations. Third, the language model never invents statistics—numbers are injected from verified JSON files, and causal claims are sanitized. Fourth, it works trilingually in English, Hindi, and Kannada.
+      </div>
+    </section>
+
+
+    <!-- SECTION 10: Stakeholders -->
+    <section id="sec-users" class="pres-section reveal-on-scroll">
+      <div class="pres-section-header">
+        <div class="pres-section-tag">Section 10 · Stakeholder Workflows</div>
+        <h2 class="pres-section-title">Who Can Use It: Real-World Implementation Profiles</h2>
+        <p class="pres-section-subtitle">
+          Designed for key actors across the healthcare delivery ecosystem, from grassroots health workers to state-level health planners.
+        </p>
+      </div>
+
+      <div class="pres-grid pres-grid-3">
+        <div class="pres-card">
+          <div style="font-weight: 800; font-size: 0.78rem; text-transform: uppercase; color: var(--pres-primary); margin-bottom: 8px;">
+            District Health Officer (DHO)
+          </div>
+          <h3 style="margin: 0 0 6px 0; font-size: 1.1rem;">Resource & Facility Allocation</h3>
+          <p style="margin: 0; font-size: 0.85rem; color: var(--pres-text-muted);">
+            Identifies taluks with severe facility deficits and medicine stockouts, reallocating drug supplies and female healthcare providers where predicted need is highest.
+          </p>
+        </div>
+
+        <div class="pres-card">
+          <div style="font-weight: 800; font-size: 0.78rem; text-transform: uppercase; color: var(--pres-secondary); margin-bottom: 8px;">
+            NGO Field Worker / ASHA Supervisor
+          </div>
+          <h3 style="margin: 0 0 6px 0; font-size: 1.1rem;">Grassroots Vulnerability Screening</h3>
+          <p style="margin: 0; font-size: 0.85rem; color: var(--pres-text-muted);">
+            Screens newly registered expectant mothers for compound barrier risks and connects them directly with transport and financial subsidy programs.
+          </p>
+        </div>
+
+        <div class="pres-card">
+          <div style="font-weight: 800; font-size: 0.78rem; text-transform: uppercase; color: var(--pres-logistic); margin-bottom: 8px;">
+            State Policy Planner
+          </div>
+          <h3 style="margin: 0 0 6px 0; font-size: 1.1rem;">Targeted Scheme Design</h3>
+          <p style="margin: 0; font-size: 0.85rem; color: var(--pres-text-muted);">
+            Uses state choropleths and risk archetypes to evaluate where targeted rural transit subsidies will produce the greatest uplift in 4+ ANC compliance.
+          </p>
+        </div>
+
+        <div class="pres-card">
+          <div style="font-weight: 800; font-size: 0.78rem; text-transform: uppercase; color: var(--pres-facility); margin-bottom: 8px;">
+            Academic Researcher / Student
+          </div>
+          <h3 style="margin: 0 0 6px 0; font-size: 1.1rem;">Epidemiological Modeling</h3>
+          <p style="margin: 0; font-size: 0.85rem; color: var(--pres-text-muted);">
+            Accesses audited SHAP feature attributions, out-of-fold metrics, and cross-tabulations for peer-reviewed public health publications.
+          </p>
+        </div>
+
+        <div class="pres-card" style="border: 1px dashed var(--pres-primary); background: #faf5ff;">
+          <div style="font-weight: 800; font-size: 0.78rem; text-transform: uppercase; color: var(--pres-rail-b); margin-bottom: 8px;">
+            Women & Families (Future Horizon)
+          </div>
+          <h3 style="margin: 0 0 6px 0; font-size: 1.1rem;">Conversational Entitlement Discovery</h3>
+          <p style="margin: 0; font-size: 0.85rem; color: var(--pres-text-muted);">
+            Direct voice-enabled interaction in local languages enabling families to discover nearby free ambulance helplines and maternity entitlements.
+          </p>
+        </div>
+      </div>
+
+      <!-- Talk Track Note -->
+      <div class="talk-track-note">
+        <div class="talk-track-header">🎙️ Presenter Script · Section 10 (5:15 – 5:40)</div>
+        Who can use this today? A District Health Officer can identify which taluks suffer the worst drug stockouts and deploy female doctors accordingly. An NGO field worker can assess high-risk pregnant mothers for transport subsidies. Policy planners can target rural transit subsidies, and researchers can explore transparent SHAP explanations. In the future, this can be put directly into the hands of families via voice-enabled WhatsApp bots.
+      </div>
+    </section>
+
+
+    <!-- SECTION 11: Close and Future Work -->
+    <section id="sec-close" class="pres-section reveal-on-scroll">
+      <div class="pres-section-header">
+        <div class="pres-section-tag">Section 11 · Summary & Roadmap</div>
+        <h2 class="pres-section-title">Conclusion & Future Research Horizon</h2>
+      </div>
+
+      <!-- Core Takeaway Banner -->
+      <div style="background: linear-gradient(135deg, #eef2ff 0%, #faf5ff 100%); border: 1px solid #c7d2fe; border-radius: var(--pres-radius-lg); padding: 28px; margin-bottom: 24px;">
+        <div style="font-weight: 800; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--pres-primary); margin-bottom: 8px;">
+          The Core Takeaway
+        </div>
+        <blockquote style="margin: 0; font-size: 1.25rem; font-weight: 700; color: #1e1b4b; line-height: 1.5;">
+          "The base paper told us what the barriers are. BarrierLens predicts who faces them, explains why, shows what they are linked to, and lets decision-makers ask in their own language and get cited solutions."
+        </blockquote>
+      </div>
+
+      <!-- Future Work Grid -->
+      <div class="pres-grid pres-grid-4">
+        <div class="pres-card">
+          <strong style="color: var(--pres-primary);">1. Live Risk Calculator</strong>
+          <p style="font-size: 0.82rem; color: var(--pres-text-muted); margin: 6px 0 0 0;">
+            Mobile-first web widget allowing community health workers to calculate barrier risk offline on Android devices.
+          </p>
+        </div>
+        <div class="pres-card">
+          <strong style="color: var(--pres-secondary);">2. Automated Policy Briefs</strong>
+          <p style="font-size: 0.82rem; color: var(--pres-text-muted); margin: 6px 0 0 0;">
+            One-click automated PDF executive briefs customized for any specific state or union territory.
+          </p>
+        </div>
+        <div class="pres-card">
+          <strong style="color: var(--pres-logistic);">3. District-Level Spatial Granularity</strong>
+          <p style="font-size: 0.82rem; color: var(--pres-text-muted); margin: 6px 0 0 0;">
+            Integrating Census 2024 boundary files to enable 700+ district-level spatial micro-planning.
+          </p>
+        </div>
+        <div class="pres-card">
+          <strong style="color: var(--pres-facility);">4. Practitioner User Testing</strong>
+          <p style="font-size: 0.82rem; color: var(--pres-text-muted); margin: 6px 0 0 0;">
+            Formal field usability trials with primary healthcare staff to measure workflow time savings.
+          </p>
+        </div>
+      </div>
+
+      <!-- Talk Track Note -->
+      <div class="talk-track-note">
+        <div class="talk-track-header">🎙️ Presenter Script · Section 11 (5:40 – 6:00)</div>
+        To conclude: The base paper told us what the barriers are. BarrierLens predicts who faces them, explains why, shows what they are linked to, and lets decision-makers ask in their own language and get cited solutions. Our future work will expand this to district-level spatial micro-planning, automated policy briefs, and formal practitioner trials. Thank you, and we welcome your questions.
+      </div>
+    </section>
+
+
+    <!-- SECTION 12: Backup Details (Collapsed by default) -->
+    <section id="sec-backup" class="pres-section">
+      <div class="pres-section-header">
+        <div class="pres-section-tag">Section 12 · Technical Backup & Methodological Appendix</div>
+        <h2 class="pres-section-title">Technical Appendix & Scope Notes</h2>
+        <p class="pres-section-subtitle">
+          Detailed technical specifications, cross-validation parameters, cluster selection criteria, and epidemiological scope limitations.
+        </p>
+      </div>
+
+      <!-- Accordion 1 -->
+      <div class="pres-accordion">
+        <div class="pres-accordion-header">
+          <span>1. Stage 1 Model Architecture & Hyperparameters</span>
+          <span class="pres-accordion-icon">▼</span>
+        </div>
+        <div class="pres-accordion-body">
+          <p>Stage 1 evaluated Logistic Regression (L2 penalty, C=1.0), Decision Trees (max_depth=8, min_samples_leaf=50), Random Forest (200 estimators, max_features='sqrt'), and XGBoost (learning_rate=0.08, max_depth=6, n_estimators=250, colsample_bytree=0.8). 5-fold stratified cross-validation was enforced on 724,115 records.</p>
+        </div>
+      </div>
+
+      <!-- Accordion 2 -->
+      <div class="pres-accordion">
+        <div class="pres-accordion-header">
+          <span>2. Rural vs Urban Granular Disparity Breakdown</span>
+          <span class="pres-accordion-icon">▼</span>
+        </div>
+        <div class="pres-accordion-body">
+          <p>Logistic barriers exhibit the steepest urban-rural divide: 35.8% in rural vs 20.6% in urban areas (a 15.2% point gap). Facility deficits affect 48.9% rural vs 39.0% urban women. Household autonomy barriers affect 28.9% rural vs 22.9% urban women.</p>
+        </div>
+      </div>
+
+      <!-- Accordion 3 -->
+      <div class="pres-accordion">
+        <div class="pres-accordion-header">
+          <span>3. K-Means Optimal Cluster Selection (k=2 Silhouette vs Elbow)</span>
+          <span class="pres-accordion-icon">▼</span>
+        </div>
+        <div class="pres-accordion-body">
+          <p>Cluster k was selected through systematic evaluation of k ∈ [2, 6]. k=2 achieved the global maximum silhouette score of 0.482, cleanly separating respondents into baseline risk versus high compound vulnerability. k=3 and k=4 yielded fragmented sub-clusters with diminished silhouette separation (<0.32).</p>
+        </div>
+      </div>
+
+      <!-- Accordion 4 -->
+      <div class="pres-accordion">
+        <div class="pres-accordion-header">
+          <span>4. Stage 2 Downstream Impact Architecture</span>
+          <span class="pres-accordion-icon">▼</span>
+        </div>
+        <div class="pres-accordion-body">
+          <p>Stage 2 models evaluate whether out-of-fold predicted barrier probabilities predict downstream reproductive outcomes over and above basic sociodemographic controls. Logistic regression and Random Forest were benchmarked on Unmet Need for Family Planning (v626a) and <4 ANC Visits (m14_1).</p>
+        </div>
+      </div>
+
+      <!-- Accordion 5 -->
+      <div class="pres-accordion">
+        <div class="pres-accordion-header">
+          <span>5. Conversational Safety & Hallucination Mitigation</span>
+          <span class="pres-accordion-icon">▼</span>
+        </div>
+        <div class="pres-accordion-body">
+          <p>The RAG assistant implements a dual-stage safety filter: (1) Prompt-side injection of pre-computed verified statistics from JSON files, and (2) Post-generation validation via <code>backend/services/safety_validator.py</code>. The validator strips causal language, sanitizes URLs against allowlisted health domains, verifies that numerical claims match the evidence payload, and enforces medical disclaimer attachment.</p>
+        </div>
+      </div>
+
+      <!-- Accordion 6 -->
+      <div class="pres-accordion">
+        <div class="pres-accordion-header">
+          <span>6. Scope Notes, Cross-Sectional Nature & Survey Extraction Limitations</span>
+          <span class="pres-accordion-icon">▼</span>
+        </div>
+        <div class="pres-accordion-body">
+          <p><strong>Epidemiological Scope Notes:</strong> All findings are derived from NFHS-5 (2019–21) cross-sectional survey data. Statistical relationships represent predictive associations, not causal proofs. Barrier encounters are self-reported by respondents. Recommended public schemes are sourced from published operational guidelines and have not been individually evaluated for local execution effectiveness. Two questionnaire items (v467f and v467i) were not uniformly available in the national extract and were substituted with corresponding verified composite metrics.</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Floating Data Audit Drawer -->
+  <aside id="audit-drawer" aria-label="Data Audit Panel">
+    <div class="audit-header">
+      <div class="audit-title">
+        <span>🔍</span>
+        <span>BarrierLens Runtime Data Audit</span>
+      </div>
+      <button id="audit-close-btn" class="audit-close-btn" title="Close Audit Panel [ESC]">✕</button>
+    </div>
+    <div class="audit-body">
+      <input type="text" id="audit-search" class="audit-search-input" placeholder="Search bound key, file, or value...">
+      <div id="audit-list"></div>
+    </div>
+  </aside>
+
+  <!-- Presentation Core Engine -->
+  <script src="../assets/js/presentation.js"></script>
+</body>
+</html>

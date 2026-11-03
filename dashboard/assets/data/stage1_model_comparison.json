@@ -1,0 +1,173 @@
+{
+  "metadata": {
+    "title": "Stage 1 Model Comparison (All Barriers \u00d7 All Models)",
+    "source_files": [
+      "data/dashboard/powerbi/stage1_model_comparison.csv",
+      "outputs/stage1_results/logistic_results.csv",
+      "outputs/stage1_results/train_test_accuracy.csv"
+    ],
+    "models": [
+      "Decision Tree",
+      "Logistic Regression",
+      "Random Forest",
+      "XGBoost"
+    ],
+    "targets": [
+      "facility",
+      "household",
+      "logistic"
+    ]
+  },
+  "models": [
+    {
+      "model": "XGBoost",
+      "target": "facility",
+      "target_label": "Health Health Facility Barrier",
+      "accuracy": 0.5864,
+      "roc_auc": 0.6188,
+      "precision": 0.5653,
+      "recall": 0.4371,
+      "f1_score": 0.493,
+      "train_accuracy": 0.5931,
+      "test_accuracy": 0.5872
+    },
+    {
+      "model": "Random Forest",
+      "target": "facility",
+      "target_label": "Health Health Facility Barrier",
+      "accuracy": 0.5811,
+      "roc_auc": 0.617,
+      "precision": 0.5404,
+      "recall": 0.5989,
+      "f1_score": 0.5682,
+      "train_accuracy": 0.5926,
+      "test_accuracy": 0.5865
+    },
+    {
+      "model": "Logistic Regression",
+      "target": "facility",
+      "target_label": "Health Health Facility Barrier",
+      "accuracy": 0.5819,
+      "roc_auc": 0.6112,
+      "precision": 0.5582,
+      "recall": 0.4372,
+      "f1_score": 0.4904,
+      "train_accuracy": 0.5844,
+      "test_accuracy": 0.5819,
+      "cv_auc_mean": 0.6123,
+      "cv_auc_std": 0.0014
+    },
+    {
+      "model": "Decision Tree",
+      "target": "facility",
+      "target_label": "Health Health Facility Barrier",
+      "accuracy": 0.5809,
+      "roc_auc": 0.6058,
+      "precision": 0.5515,
+      "recall": 0.4768,
+      "f1_score": 0.5115,
+      "train_accuracy": 0.5837,
+      "test_accuracy": 0.5809
+    },
+    {
+      "model": "XGBoost",
+      "target": "household",
+      "target_label": "Household Barrier",
+      "accuracy": 0.7307,
+      "roc_auc": 0.6625,
+      "precision": 0.5486,
+      "recall": 0.0464,
+      "f1_score": 0.0855,
+      "train_accuracy": 0.7322,
+      "test_accuracy": 0.7307
+    },
+    {
+      "model": "Random Forest",
+      "target": "household",
+      "target_label": "Household Barrier",
+      "accuracy": 0.6039,
+      "roc_auc": 0.6613,
+      "precision": 0.3693,
+      "recall": 0.6479,
+      "f1_score": 0.4704,
+      "train_accuracy": 0.7312,
+      "test_accuracy": 0.7306
+    },
+    {
+      "model": "Logistic Regression",
+      "target": "household",
+      "target_label": "Household Barrier",
+      "accuracy": 0.7298,
+      "roc_auc": 0.6586,
+      "precision": 0.5458,
+      "recall": 0.0304,
+      "f1_score": 0.0577,
+      "train_accuracy": 0.7299,
+      "test_accuracy": 0.7298,
+      "cv_auc_mean": 0.6576,
+      "cv_auc_std": 0.0017
+    },
+    {
+      "model": "Decision Tree",
+      "target": "household",
+      "target_label": "Household Barrier",
+      "accuracy": 0.7305,
+      "roc_auc": 0.6511,
+      "precision": 0.5642,
+      "recall": 0.033,
+      "f1_score": 0.0623,
+      "train_accuracy": 0.7306,
+      "test_accuracy": 0.7305
+    },
+    {
+      "model": "XGBoost",
+      "target": "logistic",
+      "target_label": "Logistical Barrier",
+      "accuracy": 0.6914,
+      "roc_auc": 0.665,
+      "precision": 0.5638,
+      "recall": 0.1037,
+      "f1_score": 0.1752,
+      "train_accuracy": 0.6936,
+      "test_accuracy": 0.6911
+    },
+    {
+      "model": "Random Forest",
+      "target": "logistic",
+      "target_label": "Logistical Barrier",
+      "accuracy": 0.6029,
+      "roc_auc": 0.663,
+      "precision": 0.4184,
+      "recall": 0.6575,
+      "f1_score": 0.5114,
+      "train_accuracy": 0.6928,
+      "test_accuracy": 0.6905
+    },
+    {
+      "model": "Logistic Regression",
+      "target": "logistic",
+      "target_label": "Logistical Barrier",
+      "accuracy": 0.6896,
+      "roc_auc": 0.6603,
+      "precision": 0.5512,
+      "recall": 0.096,
+      "f1_score": 0.1635,
+      "train_accuracy": 0.6895,
+      "test_accuracy": 0.6896,
+      "cv_auc_mean": 0.6606,
+      "cv_auc_std": 0.0009
+    },
+    {
+      "model": "Decision Tree",
+      "target": "logistic",
+      "target_label": "Logistical Barrier",
+      "accuracy": 0.6897,
+      "roc_auc": 0.6566,
+      "precision": 0.5658,
+      "recall": 0.0779,
+      "f1_score": 0.137,
+      "train_accuracy": 0.69,
+      "test_accuracy": 0.6897
+    }
+  ]
+}

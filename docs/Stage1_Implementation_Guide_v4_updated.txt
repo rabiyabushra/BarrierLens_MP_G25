@@ -1,0 +1,1280 @@
+WOMEN'S HEALTHCARE ACCESS RESEARCH PROJECT
+Project ID: P48  |  Machine Learning | Deep Learning | NLP
+Stage 1 — Model Training Implementation Guide
+GitHub Repository Structure  ·  Dataset Analysis  ·  Preprocessing  ·  Model Training & Evaluation
+Dataset: NFHS-5 India  ·  April 2026
+PBC
+Data & Preprocessing
++ Logistic Regression
+RBM
+Decision Tree
++ Evaluation Utilities
+Parvati
+Random Forest
++ SHAP Analysis
+Sharmila
+XGBoost
++ Results & Reporting
+SECTION 0  —  DOCUMENT PURPOSE & READING GUIDE
+0. How to Use This Document
+This document is the central technical reference for the BarrierLens project (P48). It is structured to give every team member a self-contained, step-by-step guide covering four things:
+The complete GitHub folder structure for the project — what exists now, what is pending, and who owns what.
+A thorough analysis of the NFHS-5 Kaggle dataset — which columns exist, which ones matter for our project, and what each one means.
+End-to-end preprocessing steps — from raw CSV to a clean, model-ready dataset.
+Model training, evaluation, and results interpretation for all four Stage 1 models (Logistic Regression, Decision Tree, Random Forest, XGBoost).
+IMPORTANT:  This document focuses exclusively on Stage 1 — Barrier Classification (the first half of the pipeline).
+Stage 2 (Health Outcome Impact Modelling), Clustering, and the BarrierLens platform are NOT covered here.
+Those sections appear in the folder structure as empty placeholders — showing what is upcoming.
+SECTION 1  —  GITHUB REPOSITORY FOLDER STRUCTURE & OWNERSHIP
+1. Complete GitHub Folder Structure
+The repository is named barrier-lens-p48. The folder tree below covers the entire project. Folders and files relevant to Stage 1 model training are marked [ACTIVE]. All other folders exist in the repo but are currently empty — they are placeholders for future phases. Each file and folder is annotated in square brackets with the team member responsible for creating and maintaining it: [PBC] owns data, preprocessing, and Logistic Regression; [RBM] owns Decision Tree and evaluation utilities; [Parvati] owns Random Forest and SHAP analysis; [Sharmila] owns XGBoost, model comparison, and the Stage 1 report.
+barrier-lens-p48/
+│
+├── README.md                          ← Project overview, setup instructions              [PBC]
+├── requirements.txt                   ← Python dependencies (pip install -r)              [PBC]
+├── .gitignore                         ← Excludes data/, models/, __pycache__/             [PBC]
+│
+├── data/                              ← [ACTIVE] Raw & processed data (NOT committed to Git)  [PBC]
+│   ├── raw/                           ← NFHS5_Women.csv downloaded from Kaggle            [PBC]
+│   ├── processed/                     ← After preprocessing: X_train, X_test, y_train, y_test CSVs  [PBC]
+│   └── README.md                      ← Instructions for downloading dataset from Kaggle  [PBC]
+│
+├── notebooks/                         ← Jupyter notebooks (exploration & experiments)
+│   ├── 00_data_exploration.ipynb      ← [ACTIVE] EDA: shape, nulls, distributions        [PBC]
+│   ├── 01_preprocessing.ipynb         ← [ACTIVE] Full preprocessing pipeline (Step-by-step)  [PBC]
+│   ├── 02_stage1_logistic.ipynb       ← [ACTIVE] Logistic Regression training & evaluation  [PBC]
+│   ├── 03_stage1_decision_tree.ipynb  ← [ACTIVE] Decision Tree training & evaluation      [RBM]
+│   ├── 04_stage1_random_forest.ipynb  ← [ACTIVE] Random Forest training & evaluation      [Parvati]
+│   ├── 05_stage1_xgboost.ipynb        ← [ACTIVE] XGBoost training & evaluation            [Sharmila]
+│   ├── 06_stage1_model_compare.ipynb  ← [ACTIVE] Side-by-side comparison of all 4 models  [Sharmila]
+│   ├── 07_stage2_outcome_model.ipynb  ← [PENDING — Stage 2]
+│   ├── 08_clustering.ipynb            ← [PENDING — K-Means Clustering]
+│   └── 09_barrierlens_platform.ipynb  ← [PENDING — BarrierLens Platform]
+│
+├── src/                               ← Reusable Python source modules
+│   ├── __init__.py
+│   ├── preprocessing/                 ← [ACTIVE]                                          [PBC — all files]
+│   │   ├── __init__.py
+│   │   ├── load_data.py               ← Load raw NFHS-5 CSV, select relevant columns      [PBC]
+│   │   ├── clean.py                   ← Handle nulls, drop irrelevant rows                [PBC]
+│   │   ├── encode.py                  ← Ordinal & one-hot encoding functions              [PBC]
+│   │   ├── engineer_features.py       ← Composite scores (media, digital, vulnerability)  [PBC]
+│   │   ├── target_builder.py          ← Build binary targets for all 3 barrier types      [PBC]
+│   │   └── split_scale.py             ← Train/test split + SMOTE + z-score scaling        [PBC]
+│   │
+│   ├── models/                        ← [ACTIVE]
+│   │   ├── __init__.py
+│   │   ├── logistic_regression.py     ← Train + evaluate LR                              [PBC]
+│   │   ├── decision_tree.py           ← Train + evaluate DT                              [RBM]
+│   │   ├── random_forest.py           ← Train + evaluate RF                              [Parvati]
+│   │   └── xgboost_model.py           ← Train + evaluate XGB                             [Sharmila]
+│   │
+│   ├── evaluation/                    ← [ACTIVE]                                          [RBM — all files]
+│   │   ├── __init__.py
+│   │   ├── metrics.py                 ← Accuracy, ROC-AUC, F1, Precision, Recall          [RBM]
+│   │   └── visualise.py               ← ROC curves, confusion matrix, SHAP plots          [RBM]
+│   │
+│   ├── shap_analysis/                 ← [ACTIVE — after models trained]                   [Parvati]
+│   │   ├── __init__.py
+│   │   └── shap_plots.py              ← SHAP waterfall, beeswarm, bar plots               [Parvati]
+│   │
+│   ├── stage2/                        ← [PENDING — Stage 2]
+│   │   └── __init__.py
+│   │
+│   ├── clustering/                    ← [PENDING — K-Means]
+│   │   └── __init__.py
+│   │
+│   └── platform/                      ← [PENDING — BarrierLens Streamlit App]
+│       └── __init__.py
+│
+├── saved_models/                      ← [ACTIVE] Trained model .pkl files (NOT committed)
+│   ├── stage1/
+│   │   ├── logistic_regression_household.pkl                                               [PBC]
+│   │   ├── logistic_regression_logistic.pkl                                                [PBC]
+│   │   ├── logistic_regression_facility.pkl                                                [PBC]
+│   │   ├── decision_tree_household/logistic/facility.pkl                                   [RBM]
+│   │   ├── random_forest_household/logistic/facility.pkl                                   [Parvati]
+│   │   └── xgboost_household/logistic/facility.pkl                                         [Sharmila]
+│   └── stage2/                        ← [PENDING]
+│
+├── outputs/                           ← [ACTIVE] Charts, tables, result exports
+│   ├── stage1_results/
+│   │   ├── model_comparison_table.csv                                                      [Sharmila]
+│   │   ├── roc_curves/                                                                     [RBM]
+│   │   ├── confusion_matrices/                                                              [RBM]
+│   │   └── shap_plots/                                                                     [Parvati]
+│   └── stage2_results/                ← [PENDING]
+│
+├── reports/                           ← Written reports / policy docs
+│   ├── Stage1_Modelling_Report.pdf    ← [ACTIVE — to be completed]                         [Sharmila]
+│   └── BarrierLens_Policy_Report.pdf  ← [PENDING]
+│
+└── platform/                          ← [PENDING — Streamlit BarrierLens App]
+    ├── app.py
+    ├── chatbot/
+    ├── dashboard/
+    └── report_generator/
+NOTE ON DATA/MODELS FOLDERS:  The data/ and saved_models/ folders are listed in .gitignore
+because the NFHS-5 CSV is ~100 MB and model .pkl files can be large.
+Every team member downloads the dataset independently from Kaggle using the link in data/README.md.
+SECTION 2  —  NFHS-5 DATASET ANALYSIS & COLUMN SELECTION
+2. NFHS-5 Dataset — Kaggle Analysis & Column Selection
+2.1  About the Dataset
+IMPORTANT DISCOVERY: When the actual Kaggle dataset was inspected, it was found that this file is NOT an individual-level women's recode file. It is a district-level aggregated factsheet — each row represents one district/state-UT, and every column is a pre-computed percentage statistic for that district. This fundamentally changes the modelling approach compared to what the base paper used (individual-level DHS recode). All preprocessing and target construction logic has been updated accordingly.
+Attribute
+Detail
+Full Name
+National Family Health Survey — 5th Round (NFHS-5), India
+Kaggle URL
+kaggle.com/datasets/bhanupratapbiswas/national-family-health-survey-nfhs-2019-21
+Coverage
+All Indian States and Union Territories
+Survey Period
+2019–2021 (conducted in two phases)
+Unit of Observation
+One district / State-UT (NOT one individual woman)
+Sample Size
+~707 district-level rows
+Row = 
+One district with aggregated health & demographic indicators (%)
+Format
+Single structured CSV — district-level percentage statistics
+Variable Naming
+Full descriptive English column names (no DHS v-codes)
+Total Columns
+~115 district-level health, demographic, and socioeconomic indicators
+Key Identifiers
+'District Names' and 'State/UT' — geographic identifiers
+2.2  How the Dataset is Organised — Column Categories
+Unlike DHS individual recode files, this dataset uses full descriptive English column names. Every value is a district-level percentage. The 115 columns fall into the following thematic groups — only a subset is used for Stage 1 modelling.
+Category
+Example Columns
+Relevant to Us?
+Role
+Geographic Identifiers
+District Names, State/UT
+YES — identifier
+Used for state-level grouping and geographic analysis; NOT fed as numeric features
+Household Infrastructure (Wealth Proxies)
+% electricity, % clean water, % sanitation, % clean fuel for cooking, % iodized salt
+YES — FEATURES
+District-level wealth and infrastructure proxies — strongest predictors of all barrier types
+Women's Education & Empowerment
+% women literate, % women 10+ yrs schooling, % ever attended school
+YES — FEATURES
+Education is the strongest protective factor against barriers per base paper
+Demographic Indicators
+% population below 15 yrs, sex ratio, sex ratio at birth
+YES — FEATURES
+Age structure and gender balance at district level
+Health Insurance & Finance
+% households with health insurance/financing scheme
+YES — FEATURE & TARGET PROXY
+Direct proxy for household financial barrier (money for treatment)
+Reproductive Health — Adverse Indicators
+% child marriage (married before 18), % teen pregnancy, % 3rd+ order births
+YES — FEATURES
+Social vulnerability indicators closely linked to barrier exposure
+Maternal Healthcare Utilisation
+% ANC in 1st trimester, % 4+ ANC visits, % institutional births, % skilled birth attendance, % postnatal care within 2 days
+YES — TARGET PROXIES
+Low utilisation = proxy for high logistic and facility barriers
+Child Vaccination & Nutrition
+% fully vaccinated 12–23 months, % BCG, % polio, % DPT, % stunted, % wasted, % underweight
+YES — TARGET PROXIES
+Vaccination coverage = proxy for facility-level access; nutrition = health outcome
+Family Planning
+% any modern method, % unmet need for FP, % female sterilisation
+YES — FEATURES & Stage 2
+Unmet FP need links directly to facility-level barriers
+Disease & Anaemia Burden
+% women anaemic, % diarrhoea in children, % ARI in children
+YES — FEATURES
+District health burden indicators
+NCD Indicators
+% high blood sugar (women/men), % elevated BP (women/men), % tobacco use
+STAGE 2 only
+Health outcome targets for Stage 2 modelling
+Cancer Screening
+% cervical cancer screening, % breast exam, % oral cavity exam
+STAGE 2 only
+Facility utilisation outcomes for Stage 2
+2.3  The Exact Columns You Need — Stage 1 Feature Set
+Since the dataset contains full descriptive English column names (not DHS v-codes), the STAGE1_COLUMNS list uses exact string column names as they appear in the CSV. Copy this as your column selection list in load_data.py.
+# ── Paste this into src/preprocessing/load_data.py ──
+IDENTIFIER_COLS = [
+    'District Names',
+    'State/UT',
+]
+FEATURE_COLS = [
+    # ── Household Infrastructure / Wealth Proxies ──
+    'Population living in households with electricity (%)',
+    'Population living in households with an improved drinking-water source1 (%)',
+    'Population living in households that use an improved sanitation facility2 (%)',
+    'Households using clean fuel for cooking3 (%)',
+    'Households using iodized salt (%)',
+    # ── Women Education & Empowerment ──
+    'Female population age 6 years and above who ever attended school (%)',
+    'Women (age 15-49) who are literate4 (%)',
+    'Women (age 15-49)  with 10 or more years of schooling (%)',
+    # ── Demographic Indicators ──
+    'Population below age 15 years (%)',
+    ' Sex ratio of the total population (females per 1,000 males)',
+    'Sex ratio at birth for children born in the last five years (females per 1,000 males)',
+    # ── Reproductive Health & Social Vulnerability ──
+    'Women age 20-24 years married before age 18 years (%)',
+    'Women age 15-19 years who were already mothers or pregnant at the time of the survey (%)',
+    'Births in the 5 years preceding the survey that are third or higher order (%)',
+    'Total Unmet need for Family Planning (Currently Married Women Age 15-49  years)7 (%)',
+    # ── Insurance & Health Financing ──
+    'Households with any usual member covered under a health insurance/financing scheme (%)',
+    # ── Women Health Burden ──
+    'All women age 15-49 years who are anaemic22 (%)',
+    'Women (age 15-49 years) whose Body Mass Index (BMI) is below normal (BMI <18.5 kg/m2)21 (%)',
+]
+# ── TARGET PROXY COLUMNS (used to construct targets — NOT used as features) ──
+HOUSEHOLD_TARGET_PROXIES = [
+    'Households with any usual member covered under a health insurance/financing scheme (%)',
+    'Women (age 15-49)  with 10 or more years of schooling (%)',
+]
+LOGISTIC_TARGET_PROXIES = [
+    'Institutional births (in the 5 years before the survey) (%)',
+    'Mothers who had at least 4 antenatal care visits  (for last birth in the 5 years before the survey) (%)',
+]
+FACILITY_TARGET_PROXIES = [
+    'Births attended by skilled health personnel (in the 5 years before the survey)10 (%)',
+    'Children age 12-23 months fully vaccinated (vaccination card or mother recall11) (%)',
+    'Mothers who received postnatal care from a doctor/nurse/LHV/ANM/midwife/other health personnel within 2 days of delivery (for last birth in the 5 years before the survey) (%)',
+]
+NOTE ON COLUMN NAMES:  The CSV column names contain special characters, trailing spaces,
+and footnote numbers (e.g. '4', '1', '7' appended to column names). Always use exact
+string matching. Run df.columns.tolist() on your loaded DataFrame to verify exact names
+before writing any column selection code. Use df.columns.str.strip() if leading/trailing
+spaces cause KeyErrors.
+2.4  Understanding the Target Variables — How to Build Them
+This is the most important section. Because the dataset does NOT contain individual barrier response columns (v467b–v467i), we cannot directly measure whether a district's women report barriers. Instead, we construct proxy-based binary targets: each barrier type is represented by 2–3 healthcare utilisation columns that are strongly theoretically linked to that barrier. We invert these columns (since low utilisation = high barrier), average them, and binarize at the district median.
+2.4.1  Proxy Column Rationale — Why These Columns Represent Each Barrier
+The table below explains the theoretical justification for each proxy column chosen to represent each barrier category.
+Barrier Type
+Proxy Column Used
+Inversion Logic
+HOUSEHOLD BARRIER
+(money, permission, companion)
+% households with health insurance
+LOW insurance coverage → HIGH financial barrier to seeking care
+HOUSEHOLD BARRIER
+(money, permission, companion)
+% women with 10+ years schooling
+LOW education → HIGH permission/autonomy barrier (less likely to seek care independently)
+LOGISTIC BARRIER
+(distance, transport)
+% institutional births
+LOW institutional births → HIGH distance/transport barriers preventing facility delivery
+LOGISTIC BARRIER
+(distance, transport)
+% mothers with 4+ ANC visits
+LOW ANC attendance → HIGH logistic barriers preventing repeated facility visits
+FACILITY BARRIER
+(no provider, no drugs)
+% births with skilled birth attendance
+LOW skilled attendance → HIGH facility-level barriers (no staff available)
+FACILITY BARRIER
+(no provider, no drugs)
+% children fully vaccinated (12–23 months)
+LOW vaccination → HIGH facility access barriers (provider/drug unavailability)
+FACILITY BARRIER
+(no provider, no drugs)
+% postnatal care within 2 days of delivery
+LOW postnatal care → HIGH facility capacity barriers
+2.4.2  How to Construct the 3 Binary Targets (in target_builder.py)
+Strategy: For each barrier type, (1) select its proxy columns, (2) invert each column (100 - value, so LOW utilisation → HIGH score), (3) average the inverted scores into a single barrier score per district, (4) binarize at the district-level median — districts scoring above median are labelled 1 (HIGH BARRIER), others 0.
+# ── src/preprocessing/target_builder.py ──
+import pandas as pd
+import numpy as np
+def build_targets(df):
+    '''
+    Constructs 3 binary district-level barrier targets from healthcare
+    utilisation proxy columns in the NFHS-5 district factsheet.
+    Strategy: invert utilisation columns (low use = high barrier),
+    average across proxies, binarize at district median.
+    Returns df with target columns added; proxy columns dropped from features.
+    '''
+    df = df.copy()
+    # ── TARGET 1: Household Barrier ──
+    # Proxies: low insurance + low education → high financial/permission barriers
+    hh_ins  = 'Households with any usual member covered under a health insurance/financing scheme (%)'
+    hh_edu  = 'Women (age 15-49)  with 10 or more years of schooling (%)'
+    df['_hh_score'] = ((100 - df[hh_ins]) + (100 - df[hh_edu])) / 2
+    df['target_household'] = (df['_hh_score'] >= df['_hh_score'].median()).astype(int)
+    # ── TARGET 2: Logistic Barrier ──
+    # Proxies: low institutional births + low 4+ ANC visits → high distance/transport barriers
+    lg_inst = 'Institutional births (in the 5 years before the survey) (%)'
+    lg_anc  = 'Mothers who had at least 4 antenatal care visits  (for last birth in the 5 years before the survey) (%)'
+    df['_lg_score'] = ((100 - df[lg_inst]) + (100 - df[lg_anc])) / 2
+    df['target_logistic'] = (df['_lg_score'] >= df['_lg_score'].median()).astype(int)
+    # ── TARGET 3: Facility-Level Barrier ──
+    # Proxies: low skilled attendance + low vaccination + low postnatal care → high facility barriers
+    fc_sba  = 'Births attended by skilled health personnel (in the 5 years before the survey)10 (%)'
+    fc_vacc = 'Children age 12-23 months fully vaccinated (card or recall11) (%)'
+    fc_pnc  = 'Mothers who received postnatal care from a doctor/nurse/LHV/ANM/midwife/other health personnel within 2 days of delivery (for last birth in the 5 years before the survey) (%)'
+    df['_fc_score'] = ((100 - df[fc_sba]) + (100 - df[fc_vacc]) + (100 - df[fc_pnc])) / 3
+    df['target_facility'] = (df['_fc_score'] >= df['_fc_score'].median()).astype(int)
+    # Drop intermediate score columns and proxy columns (must NOT be input features)
+    proxy_cols = [hh_ins, hh_edu, lg_inst, lg_anc, fc_sba, fc_vacc, fc_pnc,
+                  '_hh_score', '_lg_score', '_fc_score']
+    df = df.drop(columns=[c for c in proxy_cols if c in df.columns])
+    return df
+# Expected output distribution (district-level binarized at median):
+# target_household:  ~50% positive  (by construction — median split)
+# target_logistic:   ~50% positive  (by construction — median split)
+# target_facility:   ~50% positive  (by construction — median split)
+# NOTE: 50/50 split means NO class imbalance — SMOTE not required for these targets.
+WHY MEDIAN-SPLIT BINARIZATION?
+  The dataset has ~707 districts. Binarizing at the median gives a balanced 50/50 label split,
+  which is ideal for classification. It also has a clear interpretation: districts in the top half
+  of the barrier-score distribution are HIGH BARRIER districts. This is consistent with
+  comparative district-level policy analysis — we are identifying which half of India's districts
+  perform worse on each barrier dimension, not predicting an absolute threshold.
+2.4.3  What the Input (X) and Output (y) Look Like
+After target construction and preprocessing, here is the shape of your data:
+Description
+Shape (approx)
+X (features)
+~17 input columns (infrastructure + education + demographics + reproductive + anaemia)
+~707 rows × 17 cols
+y_household
+Binary target — 0/1 household barrier (high vs low barrier district)
+~707 rows × 1 col
+y_logistic
+Binary target — 0/1 logistic barrier (high vs low barrier district)
+~707 rows × 1 col
+y_facility
+Binary target — 0/1 facility barrier (high vs low barrier district)
+~707 rows × 1 col
+KEY INSIGHT:  You train 3 separate models for each algorithm.
+Each model solves one binary classification problem at the DISTRICT level independently.
+Logistic Regression (PBC) → 3 models  |  Decision Tree (RBM) → 3 models  |  Random Forest (Parvati) → 3 models  |  XGBoost (Sharmila) → 3 models
+TOTAL: 12 trained models for Stage 1.
+SMALL DATASET NOTE: ~707 rows — use stratified 5-fold CV; avoid deep trees without regularisation.
+SECTION 3  —  STEP-BY-STEP DATA PREPROCESSING  [Owner: PBC]
+3. Preprocessing Pipeline — Step by Step
+Preprocessing is the most critical phase. The quality of the preprocessed dataset directly determines the reliability of model predictions. Follow these steps in order, implemented in the notebooks/01_preprocessing.ipynb and mirrored in src/preprocessing/.
+Step 1 — Load the Raw Dataset and Select Relevant Columns
+# src/preprocessing/load_data.py
+import pandas as pd
+RAW_PATH = 'data/raw/NFHS5_Women.csv'
+FEATURE_COLS = [
+    # ── Household Infrastructure / Wealth Proxies ──
+    'Population living in households with electricity (%)',
+    'Population living in households with an improved drinking-water source1 (%)',
+    'Population living in households that use an improved sanitation facility2 (%)',
+    'Households using clean fuel for cooking3 (%)',
+    'Households using iodized salt (%)',
+    # ── Women Education & Empowerment ──
+    'Female population age 6 years and above who ever attended school (%)',
+    'Women (age 15-49) who are literate4 (%)',
+    'Women (age 15-49)  with 10 or more years of schooling (%)',
+    # ── Demographic Indicators ──
+    'Population below age 15 years (%)',
+    ' Sex ratio of the total population (females per 1,000 males)',
+    'Sex ratio at birth for children born in the last five years (females per 1,000 males)',
+    # ── Reproductive Health & Social Vulnerability ──
+    'Women age 20-24 years married before age 18 years (%)',
+    'Women age 15-19 years who were already mothers or pregnant at the time of the survey (%)',
+    'Births in the 5 years preceding the survey that are third or higher order (%)',
+    'Total Unmet need for Family Planning (Currently Married Women Age 15-49  years)7 (%)',
+    # ── Women Health Burden ──
+    'All women age 15-49 years who are anaemic22 (%)',
+    'Women (age 15-49 years) whose Body Mass Index (BMI) is below normal (BMI <18.5 kg/m2)21 (%)',
+]
+# Target proxy columns — loaded here but handled only in target_builder.py
+TARGET_PROXY_COLS = [
+    'Households with any usual member covered under a health insurance/financing scheme (%)',
+    'Women (age 15-49)  with 10 or more years of schooling (%)',
+    'Institutional births (in the 5 years before the survey) (%)',
+    'Mothers who had at least 4 antenatal care visits  (for last birth in the 5 years before the survey) (%)',
+    'Births attended by skilled health personnel (in the 5 years before the survey)10 (%)',
+    'Children age 12-23 months fully vaccinated (card or recall11) (%)',
+    'Mothers who received postnatal care from a doctor/nurse/LHV/ANM/midwife/other health personnel within 2 days of delivery (for last birth in the 5 years before the survey) (%)',
+]
+def load_stage1_data():
+    df = pd.read_csv(RAW_PATH)
+    # Strip leading/trailing whitespace from all column names
+    df.columns = df.columns.str.strip()
+    print(f'Raw dataset shape: {df.shape}')
+    cols_to_keep = ['District Names', 'State/UT'] + FEATURE_COLS + TARGET_PROXY_COLS
+    # Only keep columns that actually exist in the CSV
+    cols_to_keep = [c for c in cols_to_keep if c in df.columns]
+    df = df[cols_to_keep].copy()
+    print(f'After column selection: {df.shape}')
+    return df
+WHAT TO CHECK AFTER STEP 1:
+  1. Print df.shape — you should see ~707 rows and ~24 columns.
+  2. Print df.dtypes — all feature columns should be float64 (percentage values 0–100).
+  3. Print df.head(3) — first two cols should be 'District Names' and 'State/UT' (text),
+     all others should be numeric percentages.
+  4. There are NO DHS special codes (9/99/999) — values are genuine percentages or NaN.
+  5. Some columns have footnote numbers appended (e.g., 'literate4'). Use exact names.
+Step 2 — Handle Missing Values
+This dataset uses standard NaN for missing values — no DHS special code conversion needed. A small number of cells may be missing where district-level data was not collected. Strategy: median imputation across all numeric feature columns. Do NOT impute identifier columns (District Names, State/UT).
+# src/preprocessing/clean.py
+import pandas as pd
+import numpy as np
+def handle_missing(df):
+    df = df.copy()
+    id_cols = ['District Names', 'State/UT']
+    numeric_cols = [c for c in df.columns if c not in id_cols]
+    before_nulls = df[numeric_cols].isnull().sum().sum()
+    print(f'Total missing values before imputation: {before_nulls}')
+    # Median imputation for all numeric feature columns
+    for col in numeric_cols:
+        if df[col].isnull().any():
+            df[col] = df[col].fillna(df[col].median())
+    after_nulls = df[numeric_cols].isnull().sum().sum()
+    print(f'Total missing values after imputation: {after_nulls}')
+    return df
+Step 3 — Build the Target Variables
+Run the target_builder.py function from Section 2.4.2. This constructs 3 binary district-level targets using proxy inversion and median binarization, then removes the proxy columns from the feature set.
+from src.preprocessing.target_builder import build_targets
+df = build_targets(df)
+# Verify target distributions — expect ~50/50 by construction (median split):
+print(df['target_household'].value_counts(normalize=True))
+print(df['target_logistic'].value_counts(normalize=True))
+print(df['target_facility'].value_counts(normalize=True))
+# Also verify proxy columns have been removed:
+print([c for c in df.columns if 'insurance' in c.lower()])  # Should be empty []
+Step 4 — Feature Engineering (Create Composite Columns)
+We create three district-level composite indicators from the raw percentage columns. These summarise multi-dimension vulnerability into single scores that are more predictive and interpretable than any individual column.
+Engineered Feature
+How to Build It
+What It Represents
+infrastructure_index
+Mean of: electricity (%), clean water (%), sanitation (%), clean fuel (%). Range: 0–100
+District-level average basic infrastructure access — proxy for overall wealth and logistic ease
+women_empowerment_index
+Mean of: literacy (%), schooling 10+ yrs (%), school attendance (%). Range: 0–100
+Combined women's education and empowerment score — strongest protective factor per base paper
+social_vulnerability_score
+Mean of: child marriage (%), teen pregnancy (%), 3rd+ order births (%), unmet FP need (%). Range: 0–100
+Composite of four reproductive vulnerability indicators — higher score = more vulnerable district
+composite_barrier_score
+Built AFTER Stage 1 predictions — NOT in preprocessing. Used in Stage 2 only.
+Average of 3 Stage 1 barrier probabilities → fed as feature into Stage 2 health outcome models
+# src/preprocessing/engineer_features.py
+def engineer_features(df):
+    df = df.copy()
+    # 1. Infrastructure Index (mean of 4 basic services, all in %)
+    infra_cols = [
+        'Population living in households with electricity (%)',
+        'Population living in households with an improved drinking-water source1 (%)',
+        'Population living in households that use an improved sanitation facility2 (%)',
+        'Households using clean fuel for cooking3 (%)',
+    ]
+    df['infrastructure_index'] = df[infra_cols].mean(axis=1)
+    # 2. Women Empowerment Index
+    emp_cols = [
+        'Female population age 6 years and above who ever attended school (%)',
+        'Women (age 15-49) who are literate4 (%)',
+        'Women (age 15-49)  with 10 or more years of schooling (%)',
+    ]
+    df['women_empowerment_index'] = df[emp_cols].mean(axis=1)
+    # 3. Social Vulnerability Score
+    vuln_cols = [
+        'Women age 20-24 years married before age 18 years (%)',
+        'Women age 15-19 years who were already mothers or pregnant at the time of the survey (%)',
+        'Births in the 5 years preceding the survey that are third or higher order (%)',
+        'Total Unmet need for Family Planning (Currently Married Women Age 15-49  years)7 (%)',
+    ]
+    df['social_vulnerability_score'] = df[vuln_cols].mean(axis=1)
+    return df
+Step 5 — Encode Categorical Variables
+The only categorical columns in this dataset are the identifiers: 'District Names' and 'State/UT'. All feature columns are already numeric (percentage values). We encode State/UT using one-hot encoding so models can learn state-level patterns. District Names are dropped — they are identifiers, not features.
+Column
+Encoding
+Reason
+State/UT
+One-hot encoding (pd.get_dummies)
+36 states/UTs — nominal categories with no inherent order. One-hot creates binary indicator per state, allowing the model to learn state-level effects.
+District Names
+DROP before modelling
+Pure identifier — unique string per row. Including it would cause overfitting with zero generalisation value.
+All other columns
+No encoding needed — already float/int percentages
+Dataset is already numeric — no ordinal or label encoding required.
+# src/preprocessing/encode.py
+import pandas as pd
+def encode_features(df):
+    df = df.copy()
+    # Drop District Names — identifier only, not a feature
+    if 'District Names' in df.columns:
+        df = df.drop(columns=['District Names'])
+    # One-hot encode State/UT (drop_first=True avoids dummy variable trap)
+    if 'State/UT' in df.columns:
+        df = pd.get_dummies(df, columns=['State/UT'], drop_first=True, dtype=int)
+    return df
+Step 6 — Train / Test Split + Feature Scaling
+Important change from the original plan: SMOTE is NOT needed for this dataset. Because targets are binarized at the median, the class split is inherently 50/50 — there is no class imbalance. We apply only the train/test split and StandardScaler.
+Operation
+Details
+Why This Order Matters
+1. Train / Test Split (80 / 20)
+stratified=True to preserve 50/50 class balance in both sets. With ~707 rows: ~565 train, ~142 test.
+Must happen FIRST — test set must never be seen during any transformation.
+2. NO SMOTE
+Targets are 50/50 balanced by construction (median split). SMOTE would create unnecessary synthetic districts.
+Applying SMOTE on balanced data can introduce noise without any benefit.
+3. Z-score Scaling on X_train then X_test
+StandardScaler fit on X_train only, then transform both X_train and X_test.
+Fitting scaler on full data would leak test set statistics — a form of data leakage.
+# src/preprocessing/split_scale.py
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+def split_and_scale(df, target_col, apply_scaling=True):
+    '''
+    Run this once per target (household, logistic, facility).
+    Returns: X_train, X_test, y_train, y_test, scaler
+    NOTE: No SMOTE — targets are balanced 50/50 by construction.
+    '''
+    feature_cols = [c for c in df.columns if not c.startswith('target_')]
+    X = df[feature_cols]
+    y = df[target_col]
+    # Step 1: Train / Test Split (stratified for balanced classes)
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.20, random_state=42, stratify=y
+    )
+    print(f'{target_col} — Train: {len(X_train)} rows | Test: {len(X_test)} rows')
+    # Step 2: Z-score Scaling — fit on train, transform both
+    scaler = None
+    if apply_scaling:
+        scaler = StandardScaler()
+        X_train = scaler.fit_transform(X_train)
+        X_test  = scaler.transform(X_test)   # .transform() — NOT .fit_transform()
+    return X_train, X_test, y_train, y_test, scaler
+# Usage:
+# X_tr_hh, X_te_hh, y_tr_hh, y_te_hh, sc_hh = split_and_scale(df, 'target_household')
+# X_tr_lg, X_te_lg, y_tr_lg, y_te_lg, sc_lg = split_and_scale(df, 'target_logistic')
+# X_tr_fc, X_te_fc, y_tr_fc, y_te_fc, sc_fc = split_and_scale(df, 'target_facility')
+SMALL DATASET WARNING: With only ~707 districts, 80/20 split gives ~142 test rows.
+This makes per-split metrics noisy. Always use 5-fold stratified cross-validation
+(Section 8) as the primary performance measure — not just the single hold-out test set.
+Report both: CV mean ± std AND hold-out test score.
+Step 7 — Save the Preprocessed Dataset
+# At the end of notebooks/01_preprocessing.ipynb
+import os
+os.makedirs('data/processed', exist_ok=True)
+# Save feature matrix and all 3 targets as separate CSV files
+# X here is the full encoded feature matrix (before split)
+X_full = df[[c for c in df.columns if not c.startswith('target_')]]
+X_full.to_csv('data/processed/X_features.csv', index=False)
+df['target_household'].to_csv('data/processed/y_household.csv', index=False)
+df['target_logistic'].to_csv('data/processed/y_logistic.csv', index=False)
+df['target_facility'].to_csv('data/processed/y_facility.csv', index=False)
+print('Preprocessing complete. Files saved to data/processed/')
+print(f'Feature matrix shape: {X_full.shape}')  # Expect ~707 rows x ~50+ cols
+print(f'Target distributions (should be ~50/50 each):') 
+for t in ['target_household', 'target_logistic', 'target_facility']:
+    print(df[t].value_counts().to_dict())
+SECTION 4  —  WHY WE TRAIN 4 DIFFERENT MODELS ON THE SAME DATA
+4. Why Train 4 Different Models on the Same Dataset?
+A common question from new team members: if XGBoost is the most powerful, why train the other three? The answer is that each model serves a distinct scientific and practical purpose. No single model is superior across all dimensions — performance, interpretability, comparability to the base paper, and policy communication each pull in different directions.
+Model
+Owner
+Primary Purpose in This Project
+Unique Contribution
+Cannot Be Replaced By
+Logistic Regression
+PBC
+BASELINE — replicate the base paper's methodology
+Only model that produces Adjusted Odds Ratios (AOR) directly comparable to Pradhan & De (2025). Without this, we cannot validate our pipeline against the published findings.
+Any other model — AOR comparison is unique to LR
+Decision Tree
+RBM
+POLICY COMMUNICATION — extract human-readable rules
+Generates explicit if-then decision rules (e.g., 'If Wealth==Poor AND Rural AND No Education → 87% household barrier probability'). Non-technical stakeholders (health officers, NGOs) can understand and act on these rules without needing to understand the underlying ML.
+Cannot extract interpretable rules from RF or XGB
+Random Forest
+Parvati
+PRIMARY ML MODEL — best balance of performance and explainability
+Ensemble of 100–500 decision trees that eliminates the overfitting problem of a single DT. Fully SHAP-compatible — produces SHAP values that we compare against the base paper's AOR values. This is the model whose SHAP output directly answers our research questions.
+XGB performs similarly but RF is more interpretable via SHAP
+XGBoost
+Sharmila
+PERFORMANCE BENCHMARK — push accuracy ceiling
+Typically achieves 2–5% higher AUC than Random Forest on structured tabular data. Serves as the candidate for the BarrierLens production model and for Stage 2 health outcome predictions. Also SHAP-compatible — provides a second SHAP analysis for cross-validation of findings.
+RF does not achieve the same peak performance
+SUMMARY OF WHY ALL 4 ARE NECESSARY:
+  • Without Logistic Regression (PBC)  →  Cannot validate our pipeline against the base paper (Pradhan & De).
+  • Without Decision Tree (RBM)         →  Cannot produce policy rules for non-technical decision makers.
+  • Without Random Forest (Parvati)     →  Lose the primary SHAP-based explainability and AOR comparison.
+  • Without XGBoost (Sharmila)          →  Miss the best-performing production model; lose Stage 2 accuracy.
+Training all 4 also satisfies the systematic review finding of Badawy et al. [11] that ensemble
+methods consistently outperform single estimators — we demonstrate this empirically by comparing
+all 4 on the same dataset.
+SECTION 5  —  MODEL TRAINING — ALL 4 MODELS
+5. Model Training — Implementation Details
+5.1  How to Read Data Into the Training Notebooks
+# Start of every model notebook (e.g., 02_stage1_logistic.ipynb)
+import pandas as pd
+import numpy as np
+# Load preprocessed feature matrix and all 3 targets
+X = pd.read_csv('data/processed/X_features.csv')
+y_household = pd.read_csv('data/processed/y_household.csv').squeeze()
+y_logistic  = pd.read_csv('data/processed/y_logistic.csv').squeeze()
+y_facility  = pd.read_csv('data/processed/y_facility.csv').squeeze()
+print(f'Feature matrix: {X.shape}')   # Expect ~707 rows
+print(f'Household target distribution: {y_household.value_counts().to_dict()}')
+# Import preprocessing utility
+import sys; sys.path.insert(0, '..')
+from src.preprocessing.split_scale import split_and_scale
+# Create train/test splits for each target (no SMOTE — targets are balanced)
+X_tr_hh, X_te_hh, y_tr_hh, y_te_hh, sc_hh = split_and_scale(pd.concat([X, y_household], axis=1), 'target_household')
+X_tr_lg, X_te_lg, y_tr_lg, y_te_lg, sc_lg = split_and_scale(pd.concat([X, y_logistic],  axis=1), 'target_logistic')
+X_tr_fc, X_te_fc, y_tr_fc, y_te_fc, sc_fc = split_and_scale(pd.concat([X, y_facility],  axis=1), 'target_facility')
+5.2  Model 1 — Logistic Regression  [Owner: PBC]
+Parameter
+Value
+Reason
+solver
+lbfgs
+Efficient and stable; supports L2 regularisation; works well on small datasets
+max_iter
+500
+Sufficient for convergence on ~565 training rows
+C (regularisation)
+0.1 (tuned via GridSearchCV)
+Stronger regularisation (lower C) reduces overfitting on small dataset. Tune over [0.01, 0.1, 1.0, 10.0].
+class_weight
+None
+Targets are balanced 50/50 — no class weighting needed
+random_state
+42
+Reproducibility
+# src/models/logistic_regression.py
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import GridSearchCV
+import joblib, numpy as np, pandas as pd
+def train_logistic(X_train, y_train, feature_names, target_name):
+    # Tune regularisation strength C on training data only
+    param_grid = {'C': [0.01, 0.1, 1.0, 10.0]}
+    base = LogisticRegression(solver='lbfgs', max_iter=500, random_state=42)
+    grid = GridSearchCV(base, param_grid, cv=5, scoring='roc_auc')
+    grid.fit(X_train, y_train)
+    model = grid.best_estimator_
+    print(f'Best C for {target_name}: {grid.best_params_}')
+    joblib.dump(model, f'saved_models/stage1/logistic_regression_{target_name}.pkl')
+    # Extract Odds Ratios for comparison with base paper AOR values
+    coefs = pd.DataFrame({
+        'Feature':    feature_names,
+        'Coefficient': model.coef_[0],
+        'OddsRatio':  np.exp(model.coef_[0])
+    })
+    print(coefs.sort_values('OddsRatio', ascending=False).head(10))
+    return model
+lr_hh = train_logistic(X_tr_hh, y_tr_hh, X.columns.tolist(), 'household')
+lr_lg = train_logistic(X_tr_lg, y_tr_lg, X.columns.tolist(), 'logistic')
+lr_fc = train_logistic(X_tr_fc, y_tr_fc, X.columns.tolist(), 'facility')
+5.3  Model 2 — Decision Tree  [Owner: RBM]
+Parameter
+Value
+Reason
+max_depth
+3–4 (tuned via GridSearchCV)
+CRITICAL on small dataset: unlimited depth = 100% train accuracy, near-zero test accuracy. Depth 3–4 gives readable rules while preventing overfitting.
+min_samples_split
+20
+Requires 20 samples before splitting — appropriate for ~565 training rows
+min_samples_leaf
+10
+Leaf nodes must have 10+ samples — prevents noise-specific terminal nodes
+class_weight
+None
+Targets are balanced 50/50 — no class weighting needed
+criterion
+'gini'
+Standard impurity measure for classification
+random_state
+42
+Reproducibility
+# src/models/decision_tree.py
+from sklearn.tree import DecisionTreeClassifier, export_text
+from sklearn.model_selection import GridSearchCV
+import joblib
+def train_decision_tree(X_train, y_train, feature_names, target_name):
+    param_grid = {'max_depth': [2, 3, 4, 5], 'min_samples_leaf': [5, 10, 15]}
+    base = DecisionTreeClassifier(criterion='gini', random_state=42)
+    grid = GridSearchCV(base, param_grid, cv=5, scoring='roc_auc')
+    grid.fit(X_train, y_train)
+    model = grid.best_estimator_
+    print(f'Best params for {target_name}: {grid.best_params_}')
+    joblib.dump(model, f'saved_models/stage1/decision_tree_{target_name}.pkl')
+    # Print human-readable decision rules for policy communication
+    rules = export_text(model, feature_names=list(feature_names), max_depth=4)
+    print(f'--- Decision Rules for {target_name} barrier ---')
+    print(rules)
+    return model
+dt_hh = train_decision_tree(X_tr_hh, y_tr_hh, X.columns.tolist(), 'household')
+dt_lg = train_decision_tree(X_tr_lg, y_tr_lg, X.columns.tolist(), 'logistic')
+dt_fc = train_decision_tree(X_tr_fc, y_tr_fc, X.columns.tolist(), 'facility')
+5.4  Model 3 — Random Forest  [Owner: Parvati]
+Parameter
+Value
+Reason
+n_estimators
+200
+200 trees — sufficient for ~565 training rows; more adds no benefit
+max_depth
+5–8 (tuned)
+Constrain depth on small dataset to avoid every tree memorising training data
+min_samples_leaf
+5
+Minimum 5 samples per leaf — appropriate for district-level data
+max_features
+'sqrt'
+Each split considers sqrt(n_features) — standard for classification
+class_weight
+None
+Balanced targets — no class weighting needed
+n_jobs
+-1
+Use all CPU cores for parallel training
+random_state
+42
+Reproducibility
+# src/models/random_forest.py
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import GridSearchCV
+import shap, joblib
+def train_random_forest(X_train, y_train, X_test, feature_names, target_name):
+    param_grid = {
+        'n_estimators': [100, 200],
+        'max_depth': [5, 6, 8, None],
+        'min_samples_leaf': [3, 5, 10]
+    }
+    base = RandomForestClassifier(max_features='sqrt', n_jobs=-1, random_state=42)
+    grid = GridSearchCV(base, param_grid, cv=5, scoring='roc_auc', n_jobs=-1)
+    grid.fit(X_train, y_train)
+    model = grid.best_estimator_
+    print(f'Best RF params for {target_name}: {grid.best_params_}')
+    joblib.dump(model, f'saved_models/stage1/random_forest_{target_name}.pkl')
+    # SHAP feature importance analysis
+    explainer = shap.TreeExplainer(model)
+    shap_values = explainer.shap_values(X_test)
+    shap.summary_plot(shap_values[1], X_test,
+                      feature_names=feature_names, plot_type='bar')
+    return model, shap_values
+rf_hh, sv_hh = train_random_forest(X_tr_hh, y_tr_hh, X_te_hh, X.columns.tolist(), 'household')
+rf_lg, sv_lg = train_random_forest(X_tr_lg, y_tr_lg, X_te_lg, X.columns.tolist(), 'logistic')
+rf_fc, sv_fc = train_random_forest(X_tr_fc, y_tr_fc, X_te_fc, X.columns.tolist(), 'facility')
+5.5  Model 4 — XGBoost  [Owner: Sharmila]
+Parameter
+Value
+Reason
+n_estimators
+100–200 (tuned)
+Fewer rounds needed for small dataset; more risks overfitting
+learning_rate
+0.05–0.1 (tuned)
+Slower learning improves generalisation on small data
+max_depth
+3–4
+Shallow trees critical for small dataset — deeper trees memorise training data
+subsample
+0.8
+80% row sampling per tree — important regularisation on small dataset
+colsample_bytree
+0.8
+80% feature sampling per tree
+reg_alpha / reg_lambda
+0.1 / 1.0
+L1 + L2 regularisation — essential for small dataset to prevent overfitting
+eval_metric
+'auc'
+Optimise for ROC-AUC during training
+random_state
+42
+Reproducibility
+# src/models/xgboost_model.py
+from xgboost import XGBClassifier
+from sklearn.model_selection import GridSearchCV
+import shap, joblib
+def train_xgboost(X_train, y_train, X_test, feature_names, target_name):
+    param_grid = {
+        'n_estimators': [100, 200],
+        'max_depth':     [3, 4],
+        'learning_rate': [0.05, 0.1],
+        'reg_alpha':     [0.0, 0.1],
+    }
+    base = XGBClassifier(
+        subsample=0.8, colsample_bytree=0.8, reg_lambda=1.0,
+        eval_metric='auc', use_label_encoder=False, random_state=42
+    )
+    grid = GridSearchCV(base, param_grid, cv=5, scoring='roc_auc', n_jobs=-1)
+    grid.fit(X_train, y_train)
+    model = grid.best_estimator_
+    print(f'Best XGB params for {target_name}: {grid.best_params_}')
+    joblib.dump(model, f'saved_models/stage1/xgboost_{target_name}.pkl')
+    # SHAP analysis
+    explainer = shap.TreeExplainer(model)
+    shap_values = explainer.shap_values(X_test)
+    shap.summary_plot(shap_values, X_test, feature_names=feature_names)
+    return model, shap_values
+xgb_hh, sv_hh = train_xgboost(X_tr_hh, y_tr_hh, X_te_hh, X.columns.tolist(), 'household')
+xgb_lg, sv_lg = train_xgboost(X_tr_lg, y_tr_lg, X_te_lg, X.columns.tolist(), 'logistic')
+xgb_fc, sv_fc = train_xgboost(X_tr_fc, y_tr_fc, X_te_fc, X.columns.tolist(), 'facility')
+SECTION 6  —  MODEL EVALUATION & RESULTS INTERPRETATION
+6. Model Evaluation — Metrics, Code, and How to Interpret Results
+6.1  Which Metrics to Compute and Why
+Metric
+How to Compute
+What it Tells You
+Target Range
+Accuracy
+correct predictions / total predictions
+Meaningful here — targets are 50/50 balanced, so a random model gets only 50% accuracy. Unlike imbalanced datasets, accuracy is a valid baseline indicator.
+≥ 0.70 acceptable; ≥ 0.80 good
+ROC-AUC Score
+roc_auc_score(y_test, y_pred_prob)
+How well the model discriminates high-barrier vs low-barrier districts. 0.5 = random, 1.0 = perfect. Primary metric — mirrors base paper validation.
+≥ 0.80 = Good, ≥ 0.85 = Very Good
+Precision
+TP / (TP + FP)
+Of all districts predicted as high-barrier, what fraction truly are? Relevant for targeted intervention allocation.
+≥ 0.70
+Recall (Sensitivity)
+TP / (TP + FN)
+Of all truly high-barrier districts, what fraction do we identify? Missing a high-barrier district = missed intervention opportunity.
+≥ 0.70
+F1-Score
+2 × (P × R) / (P + R)
+Balanced metric combining Precision and Recall. With balanced classes, F1 is equivalent to balanced accuracy.
+≥ 0.75
+CV Mean ± Std (AUC)
+5-fold stratified cross-validation AUC
+MOST IMPORTANT metric for ~707-row dataset. Single hold-out AUC on ~142 test rows is noisy — CV gives stable estimate.
+Std < 0.05 = stable model
+Confusion Matrix
+sklearn.metrics.confusion_matrix
+Shows TP, TN, FP, FN counts — lets you understand whether the model misclassifies high-barrier or low-barrier districts more.
+Visual inspection
+6.2  Evaluation Code (metrics.py)  [Owner: RBM]
+# src/evaluation/metrics.py
+from sklearn.metrics import (
+    accuracy_score, roc_auc_score, precision_score,
+    recall_score, f1_score, confusion_matrix, classification_report
+)
+import pandas as pd
+def evaluate_model(model, X_test, y_test, model_name, target_name):
+    y_pred  = model.predict(X_test)
+    y_prob  = model.predict_proba(X_test)[:, 1]
+    results = {
+        'Model'     : model_name,
+        'Target'    : target_name,
+        'Accuracy'  : round(accuracy_score(y_test, y_pred), 4),
+        'ROC-AUC'   : round(roc_auc_score(y_test, y_prob), 4),
+        'Precision' : round(precision_score(y_test, y_pred), 4),
+        'Recall'    : round(recall_score(y_test, y_pred), 4),
+        'F1-Score'  : round(f1_score(y_test, y_pred), 4),
+    }
+    print(f'\n=== {model_name} | {target_name} barrier ===')
+    for k, v in results.items(): print(f'  {k:12s}: {v}')
+    print(classification_report(y_test, y_pred))
+    return results
+6.3  The Model Comparison Table — What to Produce  [Owner: Sharmila]
+After running all 4 models on all 3 targets, consolidate results into one comparison table (saved to outputs/stage1_results/model_comparison_table.csv). Below is the expected format with indicative target ranges for a ~707-row district dataset:
+Model
+Target
+Accuracy
+ROC-AUC
+Precision
+Recall
+F1-Score
+Logistic Regression
+Household
+~0.72
+~0.76
+~0.70
+~0.70
+~0.70
+Logistic Regression
+Logistic
+~0.73
+~0.78
+~0.72
+~0.72
+~0.72
+Logistic Regression
+Facility
+~0.74
+~0.79
+~0.73
+~0.73
+~0.73
+Decision Tree
+Household
+~0.74
+~0.74
+~0.72
+~0.72
+~0.72
+Decision Tree
+Logistic
+~0.75
+~0.76
+~0.73
+~0.73
+~0.73
+Decision Tree
+Facility
+~0.76
+~0.77
+~0.74
+~0.74
+~0.74
+Random Forest
+Household
+~0.80
+~0.86
+~0.79
+~0.78
+~0.78
+Random Forest
+Logistic
+~0.81
+~0.87
+~0.80
+~0.79
+~0.79
+Random Forest
+Facility
+~0.82
+~0.88
+~0.81
+~0.80
+~0.80
+XGBoost
+Household
+~0.82
+~0.88
+~0.81
+~0.80
+~0.80
+XGBoost
+Logistic
+~0.83
+~0.89
+~0.82
+~0.81
+~0.81
+XGBoost
+Facility
+~0.84
+~0.90
+~0.83
+~0.82
+~0.82
+NOTE:  Values above are indicative targets for a ~707-row district-level dataset with balanced 50/50 targets.
+Actual results will vary depending on GridSearchCV tuning outcomes.
+Expected ranking: XGBoost >= Random Forest > Logistic Regression >= Decision Tree.
+CRITICAL: Always report 5-fold CV AUC (mean ± std) ALONGSIDE hold-out test AUC.
+If CV AUC >> test AUC by >0.05, suspect data leakage. If CV std > 0.07, model is unstable on this dataset size.
+SECTION 7  —  MODEL DEPENDENCY TABLE & TEAM ASSIGNMENTS
+7. Model Dependency Table — Stage 1
+This table answers the question: does training Model B require that Model A is trained first? For Stage 1, the four classification models are INDEPENDENT of each other — they all consume the same preprocessed dataset. However, there are dependencies between stages and between notebooks.
+Task / Notebook
+Depends On
+Can Run Independently?
+Stage
+Team Member
+00_data_exploration.ipynb
+Raw NFHS-5 CSV in data/raw/
+YES — first thing to run
+Pre-processing
+PBC
+01_preprocessing.ipynb
+00_data_exploration.ipynb (for EDA insights)
+YES — after EDA
+Pre-processing
+PBC
+02_stage1_logistic.ipynb
+01_preprocessing.ipynb (processed data/)
+YES — independent of other models
+Stage 1
+PBC
+03_stage1_decision_tree.ipynb
+01_preprocessing.ipynb (processed data/)
+YES — independent of other models
+Stage 1
+RBM
+04_stage1_random_forest.ipynb
+01_preprocessing.ipynb (processed data/)
+YES — independent of other models
+Stage 1
+Parvati
+05_stage1_xgboost.ipynb
+01_preprocessing.ipynb (processed data/)
+YES — independent of other models
+Stage 1
+Sharmila
+06_stage1_model_compare.ipynb
+ALL of 02–05 must be done (reads saved .pkl models)
+NO — needs all 4 models trained
+Stage 1
+Sharmila
+07_stage2_outcome_model.ipynb [PENDING]
+06_model_compare.ipynb + saved Stage 1 model .pkl files
+NO — Stage 1 must be complete
+Stage 2
+TBD
+08_clustering.ipynb [PENDING]
+Preprocessed data + Stage 1 predictions
+NO — needs Stage 1 predictions
+Clustering
+TBD
+09_barrierlens_platform.ipynb [PENDING]
+ALL prior stages complete + all saved models
+NO — final deliverable
+Platform
+TBD
+KEY DEPENDENCY RULE:  Notebooks 02, 03, 04, 05 are completely independent of each other.
+This means team members can work on different models in parallel once preprocessing is done.
+CRITICAL BOTTLENECK:  01_preprocessing.ipynb must be completed and reviewed by the team
+BEFORE any model training begins. A bug in preprocessing will corrupt ALL 12 models.
+8. Cross-Validation Strategy
+With only ~707 district rows, 5-fold stratified cross-validation is the PRIMARY performance measure for this project. The hold-out test set (~142 rows) is too small to give stable single-split metrics — individual folds may vary significantly. Always report CV mean ± std alongside the hold-out score.
+from sklearn.model_selection import StratifiedKFold, cross_val_score
+kf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+# Run CV for all 4 models on all 3 targets — use full X (before split) and full y
+for model, name in [(lr_hh, 'LR'), (dt_hh, 'DT'), (rf_hh, 'RF'), (xgb_hh, 'XGB')]:
+    scores = cross_val_score(model, X, y_household, cv=kf, scoring='roc_auc')
+    print(f'{name} | Household | CV AUC: {scores.mean():.4f} +/- {scores.std():.4f}')
+for model, name in [(lr_lg, 'LR'), (dt_lg, 'DT'), (rf_lg, 'RF'), (xgb_lg, 'XGB')]:
+    scores = cross_val_score(model, X, y_logistic, cv=kf, scoring='roc_auc')
+    print(f'{name} | Logistic  | CV AUC: {scores.mean():.4f} +/- {scores.std():.4f}')
+for model, name in [(lr_fc, 'LR'), (dt_fc, 'DT'), (rf_fc, 'RF'), (xgb_fc, 'XGB')]:
+    scores = cross_val_score(model, X, y_facility, cv=kf, scoring='roc_auc')
+    print(f'{name} | Facility  | CV AUC: {scores.mean():.4f} +/- {scores.std():.4f}')
+# Interpretation guide (for ~707-row district dataset):
+# CV std < 0.05           → Model is STABLE on this dataset size
+# CV std 0.05–0.08        → Acceptable variance for small dataset
+# CV std > 0.08           → Model is UNSTABLE — try more regularisation
+# CV mean >> test AUC     → Data leakage in preprocessing (re-check encode/scale steps)
+# CV mean << test AUC     → Test split is unrepresentative (try different random_state)
+SECTION 9  —  QUICK-START CHECKLIST FOR TEAM MEMBERS
+9. Quick-Start Checklist — What to Do Right Now
+#
+Action
+File / Location
+Owner
+Status
+1
+Clone the repo: git clone https://github.com/your-org/barrier-lens-p48
+Terminal
+All
+TODO
+2
+Install dependencies: pip install -r requirements.txt
+Terminal
+All
+TODO
+3
+Download NFHS-5 Kaggle dataset (link in data/README.md) → rename file to NFHS5_Women.csv → place in data/raw/
+data/raw/
+PBC
+TODO
+4
+Verify dataset: python -c "import pandas as pd; df=pd.read_csv('data/raw/NFHS5_Women.csv'); print(df.shape, list(df.columns[:5]))" — expect ~707 rows, first cols = 'District Names', 'State/UT'
+Terminal
+PBC
+TODO
+5
+Run 00_data_exploration.ipynb — inspect column distributions, missing value counts, state-level variation, feature correlations
+notebooks/
+PBC
+TODO
+6
+Run 01_preprocessing.ipynb — Steps 1–7 (load → clean → targets → engineer → encode → split/scale → save). Confirm data/processed/ has 4 CSVs with ~707 rows and 50/50 target distributions
+notebooks/
+PBC
+TODO
+7
+PBC shares data/processed/ path + confirms preprocessing gate is PASSED before any model training begins
+data/processed/
+PBC
+TODO
+8
+RBM completes metrics.py and visualise.py (shared utilities) and confirms they are importable
+src/evaluation/
+RBM
+TODO
+9
+Parvati completes shap_plots.py and shares with Sharmila before XGBoost training starts
+src/shap_analysis/
+Parvati
+TODO
+10
+Run 02_stage1_logistic.ipynb (LR — GridSearchCV C tuning, AOR table extraction, CV AUC)
+notebooks/
+PBC
+TODO
+11
+Run 03_stage1_decision_tree.ipynb (DT — GridSearchCV depth tuning, decision rules, CV AUC)
+notebooks/
+RBM
+TODO
+12
+Run 04_stage1_random_forest.ipynb (RF — GridSearchCV, SHAP bar + beeswarm, SHAP vs AOR comparison)
+notebooks/
+Parvati
+TODO
+13
+Run 05_stage1_xgboost.ipynb (XGBoost — GridSearchCV, SHAP plots, CV AUC)
+notebooks/
+Sharmila
+TODO
+14
+Run 06_stage1_model_compare.ipynb — load all 12 .pkl files, build comparison table, ROC overlays
+notebooks/
+Sharmila
+TODO
+15
+Export outputs/stage1_results/model_comparison_table.csv and confirm all plots are in outputs/
+outputs/
+Sharmila
+TODO
+16
+Proceed to Stage 2 (notebook 07 — PENDING)
+—
+All
+PENDING
+SECTION 10  —  DETAILED SCOPE OF WORK PER TEAM MEMBER
+10. Detailed Scope of Work — All Team Members
+This section is the single source of truth for every team member's responsibilities across Stage 1. It is structured so that each member can read only their own card and have a complete, unambiguous picture of what they need to build, what files they own, and what they must deliver. The assignments have been distributed based on workload balance: PBC handles the heaviest upfront infrastructure work (repo setup, full preprocessing pipeline, and the Logistic Regression baseline model); RBM handles Decision Tree plus the shared evaluation utilities that all members depend on; Parvati handles Random Forest plus the shared SHAP analysis module that both RF and XGBoost notebooks use; and Sharmila handles XGBoost, the final model comparison notebook, and the Stage 1 written report that consolidates all results.
+PBC  —  Data & Preprocessing Lead  +  Logistic Regression  +  GitHub Repository Setup
+Category
+Detail
+Role Summary
+PBC is responsible for the entire foundation of the project. This includes creating the GitHub repository, establishing the folder structure that all other team members will use, downloading and setting up the raw dataset, implementing all six preprocessing modules in src/preprocessing/, running the exploratory data analysis notebook, executing the full preprocessing pipeline and verifying its correctness, and then training and evaluating the Logistic Regression model. PBC is also the team's critical gate — no model training by RBM, Parvati, or Sharmila can begin until PBC confirms that the data/processed/ folder contains the four correct CSV files with verified target distributions.
+Primary Tasks
+1. Create the GitHub repository barrier-lens-p48 and push the initial folder structure with README.md, requirements.txt, and .gitignore.
+2. Download NFHS-5 dataset from Kaggle, place it in data/raw/, and document the exact Kaggle URL and download instructions in data/README.md so all team members can replicate the setup.
+3. Implement src/preprocessing/load_data.py — load the raw CSV and select the 25 relevant columns from the STAGE1_COLUMNS list defined in Section 2.3.
+4. Implement src/preprocessing/clean.py — replace all DHS special missing codes (9, 99, 999, 9999, 98, 997, 998) with NaN, drop rows where any target variable is missing, and impute feature columns using median (ordinal) and mode (categorical).
+5. Implement src/preprocessing/target_builder.py — construct the three binary target columns (target_household, target_logistic, target_facility) from the raw v467b–v467i barrier response columns, then drop those raw columns from the feature set.
+6. Implement src/preprocessing/engineer_features.py — create the three composite engineered features: media_exposure_index, digital_inclusion_index, and vulnerability_score.
+7. Implement src/preprocessing/encode.py — apply ordinal encoding to v013, v106, v190, v157, v158, v159 and one-hot encoding to v025, v501, v717, v130, v131, v150, v024 using pd.get_dummies.
+8. Implement src/preprocessing/split_scale.py — perform the 80/20 stratified train-test split, then apply SMOTE on the training set only, then fit StandardScaler on X_train and transform both X_train and X_test. This order is mandatory to avoid data leakage.
+9. Run notebooks/00_data_exploration.ipynb — produce the EDA report covering row counts, null rates per column, class balance per target, feature distributions, and a correlation heatmap.
+10. Run notebooks/01_preprocessing.ipynb end-to-end — execute all seven steps, verify the target distributions match (household ~25%, logistic ~51%, facility ~55%), save the four processed CSV files to data/processed/, and post confirmation to the team.
+11. Implement src/models/logistic_regression.py — train three separate Logistic Regression models (one per barrier target) using the parameters in Section 5.2, save each as a .pkl file, and extract the Adjusted Odds Ratio table for comparison with the base paper (Pradhan & De, 2025).
+12. Run notebooks/02_stage1_logistic.ipynb — execute training and evaluation for all three LR models, print the OddsRatio table, run 5-fold stratified cross-validation, and share all results dicts with Sharmila for the comparison notebook.
+Files Owned
+src/preprocessing/load_data.py, clean.py, encode.py, engineer_features.py, target_builder.py, split_scale.py  |  src/models/logistic_regression.py  |  notebooks/00_data_exploration.ipynb, 01_preprocessing.ipynb, 02_stage1_logistic.ipynb  |  data/raw/ (local only, not committed to Git)  |  data/processed/ (4 CSV files: X_features.csv, y_household.csv, y_logistic.csv, y_facility.csv)  |  saved_models/stage1/logistic_regression_household.pkl, logistic_regression_logistic.pkl, logistic_regression_facility.pkl  |  requirements.txt, README.md, .gitignore
+Deliverables
+1. GitHub repository fully set up, accessible to all team members, with correct folder structure.
+2. Completed EDA notebook (00_data_exploration.ipynb) with distribution plots, null analysis, and correlation heatmap.
+3. Completed preprocessing pipeline (01_preprocessing.ipynb) peer-reviewed and confirmed correct.
+4. Four clean processed CSV files in data/processed/ with verified target distributions.
+5. All six src/preprocessing/ Python modules implemented, tested, and documented.
+6. Three trained Logistic Regression .pkl files in saved_models/stage1/.
+7. Adjusted Odds Ratio (AOR) table from LR — handed to Sharmila for the Stage 1 Modelling Report.
+8. Cross-validation AUC scores for LR — handed to Sharmila.
+9. Written confirmation to the team that the preprocessing gate is passed and model training can begin.
+RBM  —  Decision Tree Lead  +  Shared Evaluation Utilities  (metrics.py, visualise.py)
+Category
+Detail
+Role Summary
+RBM is responsible for two areas: the Decision Tree model, and the shared evaluation utilities that every team member calls during their own model training. The evaluation utilities (metrics.py and visualise.py) should be written before PBC's preprocessing gate is passed, so that they are immediately available to PBC, Parvati, and Sharmila the moment they start their respective model notebooks. Decision Tree training is assigned to RBM because it is the lightest of the four models to train, which balances RBM's total workload appropriately given the additional responsibility of writing the shared evaluation infrastructure. RBM should co-ordinate with Sharmila to ensure the ROC overlay plots from visualise.py are available for the comparison notebook.
+Primary Tasks
+1. Implement src/evaluation/metrics.py — write the shared evaluate_model() function that computes Accuracy, ROC-AUC, Precision, Recall, F1-Score, and prints a full classification report. This function is called by PBC, RBM, Parvati, and Sharmila after each model training run, so it must be ready before training begins.
+2. Implement src/evaluation/visualise.py — write plot_roc_curve() to generate and save individual ROC curve plots per model-target combination, plot_confusion_matrix() to generate and save confusion matrix heatmaps, and plot_roc_overlay() to overlay all four models on a single ROC plot per barrier target — this overlay is used by Sharmila in the model comparison notebook.
+3. Wait for PBC's preprocessing gate confirmation before starting Decision Tree model training.
+4. Implement src/models/decision_tree.py — train three Decision Tree classifiers (one per barrier target) using the parameters in Section 5.3, in particular using GridSearchCV to tune max_depth in the range 4–6, and save each model as a .pkl file.
+5. Run notebooks/03_stage1_decision_tree.ipynb — execute training and evaluation for all three DT models, use export_text() to print human-readable decision rules for each barrier target, generate ROC curves and confusion matrices using visualise.py, run 5-fold stratified cross-validation, and share all results dicts and rule printouts with Sharmila.
+6. Use the ROC overlay function to produce the three ROC overlay plots (one per barrier target) incorporating all four models once PBC, Parvati, and Sharmila have also finished training — these plots are placed in outputs/stage1_results/roc_curves/.
+Files Owned
+src/evaluation/metrics.py  (shared — called by all four members)  |  src/evaluation/visualise.py  (shared — called by all four members)  |  src/models/decision_tree.py  |  notebooks/03_stage1_decision_tree.ipynb  |  saved_models/stage1/decision_tree_household.pkl, decision_tree_logistic.pkl, decision_tree_facility.pkl  |  outputs/stage1_results/roc_curves/  (all ROC plots)  |  outputs/stage1_results/confusion_matrices/  (all confusion matrix plots)
+Deliverables
+1. Shared evaluation utilities (metrics.py and visualise.py) completed and available to all team members before training begins.
+2. Three trained Decision Tree .pkl files in saved_models/stage1/.
+3. Human-readable decision rule printout (from export_text()) for all three barrier targets — handed to Sharmila for inclusion in the Stage 1 Modelling Report.
+4. ROC curve plots for all four models across all three targets — saved to outputs/stage1_results/roc_curves/.
+5. Confusion matrix plots for all four models across all three targets — saved to outputs/stage1_results/confusion_matrices/.
+6. ROC overlay plots (one per barrier target, all four models) for inclusion in Sharmila's comparison notebook.
+7. Cross-validation AUC scores for DT — handed to Sharmila.
+8. Three evaluation results dicts from DT training — handed to Sharmila for the comparison table.
+Parvati  —  Random Forest Lead  +  Shared SHAP Analysis Module  (shap_plots.py)
+Category
+Detail
+Role Summary
+Parvati is responsible for two areas: the Random Forest model, and the shared SHAP analysis module (shap_plots.py) that both the Random Forest notebook and Sharmila's XGBoost notebook depend on. The SHAP module should be written and shared with Sharmila before either of them begins their model training notebooks, as Sharmila's XGBoost SHAP analysis calls Parvati's helper functions directly. Random Forest is assigned to Parvati because it is the primary machine learning model in the project — its SHAP output directly answers the research questions by revealing which socioeconomic and demographic features drive each barrier type. Parvati is also responsible for running the compare_shap_vs_aor() analysis, which compares the RF SHAP feature importance rankings against PBC's Odds Ratio table from Logistic Regression — this comparison is a core result of the Stage 1 analysis.
+Primary Tasks
+1. Implement src/shap_analysis/shap_plots.py — write the following reusable helper functions: plot_shap_bar() which generates a global feature importance bar chart from SHAP values and saves it to outputs/stage1_results/shap_plots/; plot_shap_beeswarm() which generates a beeswarm plot showing the distribution and direction of SHAP values per feature; and compare_shap_vs_aor() which merges Parvati's SHAP feature ranking with PBC's Odds Ratio table to produce a side-by-side comparison of both methods' feature importance findings.
+2. Share src/shap_analysis/shap_plots.py with Sharmila so she can import it in her XGBoost notebook. This must happen before Sharmila starts notebook 05.
+3. Wait for PBC's preprocessing gate confirmation before starting Random Forest model training.
+4. Implement src/models/random_forest.py — train three Random Forest classifiers (one per barrier target) using the parameters in Section 5.4, in particular n_estimators=300, max_features='sqrt', class_weight='balanced', and n_jobs=-1 for parallel training. Save each model as a .pkl file.
+5. Run notebooks/04_stage1_random_forest.ipynb — execute training and evaluation for all three RF models, use shap.TreeExplainer to compute SHAP values on the test set, generate SHAP bar and beeswarm plots for all three targets using the helper functions from shap_plots.py, run compare_shap_vs_aor() using PBC's OddsRatio table, run 5-fold stratified cross-validation, and share all results with Sharmila.
+6. Save all SHAP plot outputs to outputs/stage1_results/shap_plots/ following the naming convention: random_forest_{target}_bar.png and random_forest_{target}_beeswarm.png.
+Files Owned
+src/shap_analysis/shap_plots.py  (shared — also used by Sharmila's XGBoost notebook)  |  src/models/random_forest.py  |  notebooks/04_stage1_random_forest.ipynb  |  saved_models/stage1/random_forest_household.pkl, random_forest_logistic.pkl, random_forest_facility.pkl  |  outputs/stage1_results/shap_plots/random_forest_*.png  (SHAP bar + beeswarm plots for all 3 targets)
+Deliverables
+1. Shared SHAP analysis module (shap_plots.py) completed and shared with Sharmila before XGBoost training starts.
+2. Three trained Random Forest .pkl files in saved_models/stage1/.
+3. SHAP bar plots and beeswarm plots for all three barrier targets — saved to outputs/stage1_results/shap_plots/.
+4. SHAP vs Odds Ratio comparison table (from compare_shap_vs_aor()) — handed to Sharmila for inclusion in the Stage 1 Modelling Report, as this is a primary research finding.
+5. Cross-validation AUC scores for RF — handed to Sharmila.
+6. Three evaluation results dicts from RF training — handed to Sharmila for the comparison table.
+Sharmila  —  XGBoost Lead  +  Model Comparison Notebook  +  Stage 1 Modelling Report
+Category
+Detail
+Role Summary
+Sharmila is responsible for three areas: the XGBoost model, the final model comparison notebook that consolidates all 12 models' results, and the Stage 1 Modelling Report that communicates findings to the wider team and stakeholders. XGBoost is assigned to Sharmila because it is the project's performance benchmark model and the candidate for production use in the BarrierLens platform — it requires the most careful hyperparameter handling (particularly scale_pos_weight for class imbalance) and produces SHAP analysis that must be compared against Parvati's RF SHAP output. Sharmila is the last to start model training (as she depends on Parvati's shap_plots.py), which means she has the most time to prepare the comparison notebook and report infrastructure in advance. The Stage 1 Modelling Report is Sharmila's primary deliverable — it is the document that the whole team reviews before Stage 2 begins.
+Primary Tasks
+1. Wait for both PBC's preprocessing gate confirmation AND Parvati's shap_plots.py to be ready before starting XGBoost training.
+2. Implement src/models/xgboost_model.py — compute scale_pos_weight as the ratio of negative to positive class samples (to handle class imbalance), then train three XGBoost classifiers (one per barrier target) using the parameters in Section 5.5. Use eval_set to track AUC on the test set during training (verbose=50 to see progress every 50 rounds). Save each model as a .pkl file.
+3. Run notebooks/05_stage1_xgboost.ipynb — execute training and evaluation for all three XGB models, use shap.TreeExplainer to compute SHAP values on the test set, generate SHAP bar and beeswarm plots using Parvati's helper functions from shap_plots.py, run 5-fold stratified cross-validation, and record all results.
+4. Compare XGBoost SHAP feature rankings against Random Forest SHAP rankings from Parvati — note any features where the two models significantly disagree on importance, as these disagreements are analytically interesting and should be discussed in the report.
+5. Collect evaluation results dicts from PBC (LR — 3 dicts), RBM (DT — 3 dicts), and Parvati (RF — 3 dicts) once each member finishes their training.
+6. Run notebooks/06_stage1_model_compare.ipynb — load all 12 saved .pkl models, run evaluate_model() for each using RBM's metrics.py, and consolidate all 12 results (4 models × 3 targets × 5 metrics) into one DataFrame.
+7. Export the consolidated results to outputs/stage1_results/model_comparison_table.csv.
+8. Use RBM's plot_roc_overlay() to produce the three ROC overlay charts (one per barrier target), showing all four models' curves on the same axes — these are the primary visual for the report.
+9. Write reports/Stage1_Modelling_Report.pdf — the report must include: (a) a performance comparison table and interpretation of which model wins on which metric and why; (b) the OddsRatio table from PBC and the SHAP feature ranking from Parvati, with a discussion of where the two methods agree and where they diverge; (c) the human-readable Decision Tree rules from RBM and what they imply for policy; (d) cross-validation AUC scores from all four members confirming model stability; (e) a discussion of class imbalance handling via SMOTE and class_weight; (f) limitations of the Stage 1 analysis; and (g) recommendations for which model to carry forward into Stage 2.
+10. Circulate the completed report to PBC, RBM, and Parvati for review. Incorporate feedback and obtain final sign-off from all team members before declaring Stage 1 complete and proceeding to Stage 2.
+Files Owned
+src/models/xgboost_model.py  |  notebooks/05_stage1_xgboost.ipynb  |  notebooks/06_stage1_model_compare.ipynb  |  saved_models/stage1/xgboost_household.pkl, xgboost_logistic.pkl, xgboost_facility.pkl  |  outputs/stage1_results/model_comparison_table.csv  |  outputs/stage1_results/shap_plots/xgboost_*.png  (SHAP bar + beeswarm for all 3 targets)  |  reports/Stage1_Modelling_Report.pdf
+Deliverables
+1. Three trained XGBoost .pkl files in saved_models/stage1/.
+2. XGBoost SHAP bar plots and beeswarm plots for all three barrier targets — saved to outputs/stage1_results/shap_plots/.
+3. XGB vs RF SHAP comparison analysis — included in the Stage 1 Modelling Report.
+4. model_comparison_table.csv — all 12 model-target combinations across all five metrics, saved to outputs/stage1_results/.
+5. Three ROC overlay plots (one per barrier target, all four models on the same axes) — saved to outputs/stage1_results/roc_curves/ and included in the report.
+6. reports/Stage1_Modelling_Report.pdf — the primary written deliverable for Stage 1, covering performance comparison, AOR vs SHAP analysis, decision rules, CV stability, limitations, and Stage 2 recommendations.
+7. Final team sign-off confirmation that Stage 1 is complete and Stage 2 can begin.
+APPENDIX  —  REQUIREMENTS & VERSION REFERENCE
+Appendix A — requirements.txt
+# Core data science
+pandas>=2.0.0
+numpy>=1.24.0
+scikit-learn>=1.3.0
+openpyxl>=3.1.0             # for reading NFHS-5 Excel file if downloaded as .xlsx
+# NOTE: imbalanced-learn / SMOTE is NOT required for this dataset.
+# Targets are 50/50 balanced by construction (median-split binarization).
+# Boosting
+xgboost>=1.7.0
+# Explainability
+shap>=0.43.0
+# Visualisation
+matplotlib>=3.7.0
+seaborn>=0.12.0
+plotly>=5.15.0
+# Notebook
+jupyter>=1.0.0
+ipykernel>=6.0.0
+# Model persistence
+joblib>=1.3.0
+# Platform (for later stages)
+streamlit>=1.30.0
+reportlab>=4.0.0
+# API
+anthropic>=0.20.0          # for BarrierLens chatbot (Stage 3 — pending)
+— END OF DOCUMENT —
+WHCARP Project P48 · BarrierLens Stage 1 Implementation Guide · April 2026

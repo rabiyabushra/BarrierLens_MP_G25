@@ -289,7 +289,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
     if (launchBtn) {
       launchBtn.addEventListener("click", () => {
-        window.DashboardState.startPresentation(0);
+        const inPages = window.location.pathname.includes('/pages/');
+        window.location.href = inPages ? 'presentation.html' : 'pages/presentation.html';
       });
     }
   }
@@ -423,6 +424,15 @@ document.addEventListener("DOMContentLoaded", function () {
         window.BarrierLensChatbotUI.openChat();
       }
     });
+  }
+
+  // Auto-open chatbot if #chat hash or ?chat=open query is present
+  if (window.location.hash === "#chat" || window.location.search.includes("chat=open")) {
+    setTimeout(function () {
+      if (window.BarrierLensChatbotUI && typeof window.BarrierLensChatbotUI.openChat === "function") {
+        window.BarrierLensChatbotUI.openChat();
+      }
+    }, 800);
   }
 
   // Inject Chatbot Scripts dynamically if missing on sub-page

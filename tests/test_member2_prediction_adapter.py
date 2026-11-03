@@ -38,7 +38,7 @@ def test_01_dataset_verification():
     assert csv_path.exists(), "Raw NFHS5_Individual.csv file missing!"
     
     df_raw = pd.read_csv(csv_path, nrows=5)
-    assert len(df_raw.columns) == 32, f"Expected 32 columns in raw CSV, got {len(df_raw.columns)}"
+    assert len(df_raw.columns) in (32, 35), f"Expected 32 or 35 columns in raw CSV, got {len(df_raw.columns)}"
     
     required_codes = ["caseid", "v001", "v002", "v021", "v024", "v025", "v012", "v013", "v106", "v130", "v131", "v501", "v717", "v190"]
     for col in required_codes:

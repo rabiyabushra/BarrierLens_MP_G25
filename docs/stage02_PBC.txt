@@ -1,0 +1,41 @@
+Summary — PBC Stage 2 Work Completed
+I reviewed Stage2_Implementation_Guide_v2 and finished all tasks assigned to PBC (Clustering + Multi-Output Logistic Regression).
+
+What was already in place
+src/clustering/kmeans_cluster.py — MiniBatchKMeans implementation
+src/models/stage2_logistic.py — two separate LR models per target
+scripts/run_stage2_data_prep.py — pipeline script
+What I completed
+1. Column verification (Checklist #1)
+
+v626a — present (466,859 restricted sample for family planning)
+m14 — not in NFHS5_Individual.csv, so target_anc_gap is skipped (all-NaN)
+2. Stage 2 data prep + clustering (Tasks #5–6)
+Ran scripts/run_stage2_data_prep.py:
+
+3-fold OOF barrier probabilities for 724,115 women
+Built target_unmet_fp (49,672 positive / 10.6%)
+K-Means: k=2 (best silhouette = 0.3986)
+Cluster	N women	Archetype
+0
+383,077
+High Vulnerability, High Barrier Exposure
+1
+341,038
+High Media & Digital Inclusion
+3. Notebooks created
+
+notebooks/08_clustering.ipynb
+notebooks/09_stage2_logistic.ipynb
+4. Logistic regression trained (Task #7)
+For target_unmet_fp:
+
+ROC-AUC: 0.6591 | F1: 0.2541 | 3-fold CV AUC: 0.6584
+Barrier uplift: +0.0017 (socioeconomic-only 0.6567 → full 0.6583)
+Top predictor: household_barrier_prob (OR = 1.15)
+Outputs saved
+data/processed/stage2/ — OOF probs, targets, feature matrix
+outputs/stage2_results/ — cluster assignments, profiles, k-selection, logistic metrics & coefficients
+saved_models/stage2/ — K-Means model/scaler + logistic model
+Note for the team
+target_anc_gap cannot run until m14 is added back to the raw extract from IAIR7EFL.DTA. Only unmet family planning need is modelled for now, which matches the guide’s scope-honesty note when m14 is unavailable.

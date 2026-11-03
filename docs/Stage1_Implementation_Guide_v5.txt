@@ -1,0 +1,470 @@
+WOMEN'S HEALTHCARE ACCESS RESEARCH PROJECT
+Project ID: P48  |  Machine Learning | Deep Learning | NLP
+Stage 1 — Model Training Implementation Guide  (v5 — Individual-Level Rebuild)
+Corrects v4_updated's district-level assumption using the real individual-level DHS recode file
+Dataset: IAIR7EFL.DTA (NFHS-5 India, Individual Women's Recode)  ·  July 2026
+PBC
+Data & Preprocessing + Logistic Regression
+RBM
+Decision Tree + Evaluation Utilities
+Parvati
+Random Forest + SHAP Analysis
+Sharmila
+XGBoost + Results & Reporting
+SECTION 0  —  WHY v5 EXISTS — READ THIS FIRST
+0. Why This Version Exists
+This document replaces Stage1_Implementation_Guide_v4_updated.docx. v4 was built on a discovery that turned out to be incomplete: when the team inspected the Kaggle NFHS-5 CSV, it appeared to be a ~707-row district-level factsheet, so v4 rebuilt the whole pipeline around proxy-based, median-split district targets.
+The notebook NFHS5_Individual.ipynb (uploaded by PBC) shows the team already has direct access to IAIR7EFL.DTA — the real DHS-format individual-level NFHS-5 recode file, 724,115 rows, containing the actual v467b–v467h barrier-response columns the base paper (Pradhan & De, 2025) used. This is a fundamentally different, better dataset: individual women as the unit of observation, real barrier questions instead of inferred proxies, and direct comparability with the base paper's Adjusted Odds Ratios — which was the project's original design intent in the approach document (Section 3.2) before the district-level detour.
+DECISION CONFIRMED WITH PBC:
+IAIR7EFL.DTA is the dataset going forward. Stage 1 is being fully redone on it. The district-level Kaggle CSV and everything built on it in v4_updated (target_builder.py's median-split logic, the 17-column FEATURE_COLS list, the "no SMOTE needed" guidance) no longer applies and should not be used for new work.
+0.1 What Changes vs. v4_updated
+Aspect
+v4_updated (district-level, WRONG dataset)
+v5 (individual-level, CORRECT dataset)
+Unit of observation
+1 district (~707 rows)
+1 woman (724,115 rows)
+Barrier targets
+Proxy scores inverted from utilisation %
+Real v467b–v467h barrier responses
+Target construction
+Median split → forced 50/50
+Natural prevalence (14%–42% per item)
+Class imbalance
+None by construction — SMOTE dropped
+Real imbalance — class_weight / SMOTE needed again
+Comparability to base paper
+Indirect (different unit of analysis)
+Direct — same women-level AOR logic
+Compute profile
+Tiny dataset, GridSearchCV over everything
+Large dataset — tune on a stratified subsample
+0.2 Two Open Items PBC Must Resolve Before Preprocessing Starts
+The notebook's cols_needed list pulled v467b, c, d, e, g, h — it skipped v467f ("not wanting to go alone" / companion) and v467i ("no drugs available"). Per the approach document's own barrier grouping (Section 3.2.4), Household needs b+c+f and Facility needs g+h+i. Re-run the Step-1 load including v467f and v467i before finalising target_builder.py — see Section 2.4.
+Confirm whether v467b–h should be modelled on the full 724,115-row file or restricted to a subgroup (e.g. currently married / ever-married women, matching the base paper's 108,785-women analytic sample). The value counts PBC already ran show zero missingness on v467b/c across all 724,115 rows, which suggests the module was asked to the full sample here — but the base paper's own N (108,785) implies a filter was applied on their end. Decide and document the inclusion rule in 00_data_exploration.ipynb.
+SECTION 1  —  GITHUB FOLDER STRUCTURE & OWNERSHIP (UPDATED FOR v5)
+1. Repository Structure — What Changes
+The barrier-lens-p48 repo structure from v4 stays the same at the folder level. Only file contents change (new column lists, new target logic, new hyperparameters). One rename: data/raw/ now expects the .DTA file, not a Kaggle CSV.
+data/raw/
+  IAIR7EFL.DTA                     ← [PBC] the real dataset — DHS individual recode
+  (NFHS5_Women.csv from v4 is RETIRED — do not use)
+ 
+notebooks/
+  00_data_exploration.ipynb        ← [ACTIVE] rebuilt — .DTA load, v467 distributions   [PBC]
+  01_preprocessing.ipynb           ← [ACTIVE] rebuilt — real target construction         [PBC]
+  02_stage1_logistic.ipynb         ← [ACTIVE] rebuilt hyperparameters for N=724K          [PBC]
+  03_stage1_decision_tree.ipynb    ← [ACTIVE] rebuilt hyperparameters for N=724K          [RBM]
+  04_stage1_random_forest.ipynb    ← [ACTIVE] rebuilt hyperparameters for N=724K       [Parvati]
+  05_stage1_xgboost.ipynb          ← [ACTIVE] rebuilt hyperparameters for N=724K      [Sharmila]
+  06_stage1_model_compare.ipynb    ← [ACTIVE] unchanged in structure                  [Sharmila]
+ 
+src/preprocessing/
+  load_data.py       ← REWRITE: pd.read_stata, real column list (Section 2.3)          [PBC]
+  clean.py            ← REWRITE: DHS special-code handling (9/99/999) is back           [PBC]
+  target_builder.py   ← REWRITE: real v467-based OR-logic targets (Section 2.4)         [PBC]
+  engineer_features.py← REWRITE: individual-level composite indices (Section 3 Step 4)  [PBC]
+  encode.py           ← REWRITE: v013/v106/v190 ordinal, v024/v130/v131/v501/v717 OHE   [PBC]
+  split_scale.py       ← REWRITE: SMOTE/class_weight restored (Section 3 Step 6)         [PBC]
+Everything under src/models/, src/evaluation/, src/shap_analysis/ keeps the same file names and ownership as v4 — only the hyperparameters inside them change (Section 5).
+SECTION 2  —  DATASET ANALYSIS & COLUMN SELECTION — IAIR7EFL.DTA
+2. The Real Dataset
+2.1 About the Dataset
+Attribute
+Detail
+File
+IAIR7EFL.DTA — standard DHS-VII Stata individual recode
+Full Name
+National Family Health Survey — 5th Round (NFHS-5), India — Individual Women's file
+Unit of Observation
+One woman aged 15–49 (row = one survey respondent)
+Total Rows
+724,115
+Total Columns Available
+5,972 (full DHS variable set — only a subset is loaded per Section 2.3)
+Variable Naming
+Standard DHS v-codes (v012, v106, v467b, ...) — same convention as the base paper
+Format
+Stata .DTA — must be read with pandas.read_stata, not read_csv
+2.2 Column Groups Selected (from PBC's exploration notebook)
+Category
+Columns
+Role
+Identifiers
+caseid, v001, v002, v021, v024, v025
+Case ID, cluster/household/PSU, state, urban-rural
+Woman Background
+v012, v013, v106, v130, v131, v501, v717
+Age, age group, education, religion, caste/tribe, marital status, occupation
+Household
+v190, v169a, v170, v481
+Wealth index, mobile phone, bank account, health insurance
+Media Exposure
+v157, v158, v159
+Newspaper, radio, TV frequency
+Autonomy
+v743f, v466
+Who decides on money earned by husband; decides child's medical treatment
+Barrier Targets (Stage 1)
+v467b, v467c, v467d, v467e, v467g, v467h
+The real barrier questions — see Section 2.4
+Missing — must add
+v467f, v467i
+Companion barrier; no-drugs barrier — needed to complete Household/Facility groups
+Stage 2 (future)
+v626a, m14
+Unmet need for family planning; ANC visit count
+Bonus context
+s245a, s245b, s245h
+Reasons treatment not sought: cost, transport, husband's permission
+2.3 Exact Load Code — Step 1
+This mirrors PBC's notebook exactly, with v467f and v467i added (the two missing barrier columns flagged in Section 0.2).
+# src/preprocessing/load_data.py
+import pandas as pd
+ 
+RAW_PATH = 'data/raw/IAIR7EFL.DTA'
+ 
+cols_needed = [
+    'caseid', 'v001', 'v002', 'v021', 'v024', 'v025',
+    'v012', 'v013', 'v106', 'v130', 'v131', 'v501', 'v717',
+    'v190', 'v169a', 'v170', 'v481',
+    'v157', 'v158', 'v159',
+    'v743f', 'v466',
+    'v467b', 'v467c', 'v467d', 'v467e', 'v467f', 'v467g', 'v467h', 'v467i',  # f, i ADDED
+]
+ 
+def load_stage1_data():
+    reader = pd.read_stata(RAW_PATH, iterator=True)
+    available = list(reader.variable_labels().keys())
+    reader.close()
+    cols_to_load = [c for c in cols_needed if c in available]
+    missing = [c for c in cols_needed if c not in available]
+    if missing:
+        print(f'WARNING — not found in file: {missing}')
+    df = pd.read_stata(RAW_PATH, columns=cols_to_load)
+    print(f'Loaded shape: {df.shape}')
+    return df
+2.4 Target Variables — the REAL Barrier Questions
+v467b through v467i are DHS's standard 'problems in accessing health care for yourself' battery. Each is answered no problem / not a big problem / big problem. This is exactly what the base paper used — no proxy, no inversion, no median split.
+Barrier Category
+Columns
+DHS Meaning
+Prevalence ("big problem", from PBC's counts)
+Household
+v467b
+Getting permission to go
+14.0%
+Household
+v467c
+Getting money needed for treatment
+22.6%
+Household
+v467f
+Not wanting to go alone (companion)
+TBD — column not yet pulled
+Logistic
+v467d
+Distance to health facility
+26.3%
+Logistic
+v467e
+Having to take transport
+24.8%
+Facility
+v467g
+Concern: no female provider
+32.8%
+Facility
+v467h
+Concern: no provider at all
+42.2%
+Facility
+v467i
+Concern: no drugs available
+TBD — column not yet pulled
+2.4.1 Building the 3 Binary Targets — OR logic, not averaging
+Unlike v4's inverted-average-then-median approach, this is simple: a woman has a barrier of a given type if she reported "big problem" on ANY of that category's questions. This matches the base paper's own definition (Section 2.1 of the approach document: "25% of women reported at least one" household barrier).
+# src/preprocessing/target_builder.py
+import pandas as pd
+ 
+BARRIER_COLS = {
+    'household': ['v467b', 'v467c', 'v467f'],   # permission, money, companion
+    'logistic':  ['v467d', 'v467e'],             # distance, transport
+    'facility':  ['v467g', 'v467h', 'v467i'],    # no female provider, no provider, no drugs
+}
+ 
+def build_targets(df):
+    df = df.copy()
+    for barrier_type, cols in BARRIER_COLS.items():
+        present = [c for c in cols if c in df.columns]
+        for c in present:
+            df[f'{c}_bin'] = (df[c] == 'big problem').astype(int)
+        df[f'target_{barrier_type}'] = df[[f'{c}_bin' for c in present]].max(axis=1)
+        prevalence = df[f'target_{barrier_type}'].mean() * 100
+        print(f'target_{barrier_type}: {prevalence:.1f}% positive  (built from {present})')
+    drop_cols = [f'{c}_bin' for cols in BARRIER_COLS.values() for c in cols if f'{c}_bin' in df.columns]
+    df = df.drop(columns=drop_cols)
+    return df
+EXPECTED CLASS BALANCE — NOT 50/50:
+Based on the individual v467 prevalences already measured, expect roughly: Household ~30-35% positive, Logistic ~40-45% positive, Facility ~55-60% positive (OR-combining always pushes prevalence above the highest single component). All three are imbalanced. class_weight='balanced' or SMOTE is required again — the opposite of v4's guidance.
+SECTION 3  —  STEP-BY-STEP PREPROCESSING  [Owner: PBC]
+3. Preprocessing Pipeline
+Step 1 — Load and Select Columns
+Covered in Section 2.3. Run and confirm df.shape = (724115, ~29) and check df['v467b'].isnull().sum() etc. across all barrier columns — PBC's earlier run showed 0 missing on b/c; verify the same for d, e, f, g, h, i.
+Step 2 — Handle Missing Values and DHS Special Codes
+Unlike the district CSV (plain NaN only), the individual DHS file uses category-specific special codes for "don't know" / "not applicable" (commonly 8, 9, 98, 99, 999, 9998, 9999 depending on the variable). These must be converted to NaN before imputation — this step did not exist in v4 and must be restored from the original approach document's plan.
+# src/preprocessing/clean.py
+import numpy as np
+ 
+SPECIAL_CODES = [8, 9, 98, 99, 998, 999, 9998, 9999]
+ 
+def handle_missing(df, numeric_cols):
+    df = df.copy()
+    for col in numeric_cols:
+        df[col] = df[col].replace(SPECIAL_CODES, np.nan)
+    before = df[numeric_cols].isnull().sum().sum()
+    for col in numeric_cols:
+        if df[col].dtype.kind in 'if':
+            df[col] = df[col].fillna(df[col].median())
+        else:
+            df[col] = df[col].fillna(df[col].mode()[0])
+    after = df[numeric_cols].isnull().sum().sum()
+    print(f'Missing before: {before}, after: {after}')
+    return df
+Step 3 — Build Targets
+Run build_targets() from Section 2.4.1. Verify all three prevalences are printed and are NOT ~50%; if any target lands very close to 50%, double-check the OR logic didn't accidentally include an already-binary column twice.
+Step 4 — Feature Engineering
+Engineered Feature
+Built From
+Represents
+media_exposure_index
+v157, v158, v159 (mean, reverse-coded so higher = more exposure)
+Composite mass-media exposure — base paper's protective factor
+digital_inclusion_index
+v169a (mobile) + v170 (bank account), both binary, averaged
+Digital/financial empowerment proxy
+vulnerability_score
+Low wealth (v190) + rural (v025) + no education (v106) + low media exposure, weighted composite
+Risk stratification feature, used again in Stage 2 clustering
+Step 5 — Encode Categorical Variables
+Column
+Encoding
+Reason
+v013 (age group), v106 (education), v190 (wealth)
+Ordinal encoding
+Natural order preserved — matches base paper's AOR reference categories
+v025 (urban/rural)
+Binary
+Two categories only
+v024 (state), v130 (religion), v131 (caste/tribe), v501 (marital status), v717 (occupation)
+One-hot (pd.get_dummies, drop_first=True)
+Nominal — no inherent order
+caseid, v001, v002, v021
+DROP before modelling
+Pure identifiers
+Step 6 — Train/Test Split, Class Imbalance, Scaling
+With real class imbalance restored and 724,115 rows, the order of operations from the original approach document (Section 3.4) is back in force: split first, then SMOTE on the training fold only, then scale.
+# src/preprocessing/split_scale.py
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from imblearn.over_sampling import SMOTE
+ 
+def split_and_scale(df, target_col, use_smote=True, apply_scaling=True, sample_for_speed=None):
+    feature_cols = [c for c in df.columns if not c.startswith('target_')]
+    X, y = df[feature_cols], df[target_col]
+    if sample_for_speed:
+        # optional stratified subsample for fast GridSearchCV iteration — NOT for final fit
+        X, _, y, _ = train_test_split(X, y, train_size=sample_for_speed, stratify=y, random_state=42)
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.20, random_state=42, stratify=y)
+    if use_smote:
+        X_train, y_train = SMOTE(random_state=42).fit_resample(X_train, y_train)
+    scaler = None
+    if apply_scaling:
+        scaler = StandardScaler()
+        X_train = scaler.fit_transform(X_train)
+        X_test = scaler.transform(X_test)
+    print(f'{target_col} — Train: {len(y_train)} (post-SMOTE) | Test: {len(y_test)}')
+    return X_train, X_test, y_train, y_test, scaler
+COMPUTE NOTE:
+SMOTE on ~580K training rows is expensive but tractable. If it becomes a bottleneck, prefer class_weight='balanced' (LR, DT, RF) or scale_pos_weight (XGBoost) over SMOTE — they achieve a similar effect without materialising synthetic rows across a 700K-row set. Use sample_for_speed (e.g. 50,000) only for GridSearchCV hyperparameter search, never for the final model fit.
+Step 7 — Save Processed Dataset
+import os
+os.makedirs('data/processed', exist_ok=True)
+X_full = df[[c for c in df.columns if not c.startswith('target_')]]
+X_full.to_csv('data/processed/X_features.csv', index=False)
+for t in ['target_household', 'target_logistic', 'target_facility']:
+    df[t].to_csv(f'data/processed/y_{t.split("_")[1]}.csv', index=False)
+print(f'Feature matrix: {X_full.shape}')  # ~724,115 rows x ~40-60 cols after one-hot
+SECTION 4  —  WHY 4 MODELS — UNCHANGED RATIONALE
+4. Why Train 4 Different Models
+The reasoning from v4 Section 4 still holds and is not repeated in full here — Logistic Regression for AOR comparability with the base paper, Decision Tree for policy rules, Random Forest as the primary SHAP-explainable model, XGBoost as the performance ceiling. What changes is that with 724K individual-level rows, this comparison is now happening on data structurally identical to what the base paper used — so the AOR comparison in particular becomes a real, defensible validation rather than an approximate one.
+SECTION 5  —  MODEL TRAINING — REBUILT HYPERPARAMETERS FOR N=724,115
+5. Model Training — Implementation Details
+WHY THE PARAMETERS BELOW DIFFER FROM v4:
+v4's entire hyperparameter logic (max_depth=3-4, heavy L1/L2, GridSearchCV over the full grid on the full data) was reverse-engineered to prevent overfitting on 707 rows. That risk is largely gone at 724,115 rows — the opposite risk (underfitting from over-regularising, and GridSearchCV becoming too slow to run on the full data) is now the concern.
+5.1 Loading Data for Training Notebooks
+import pandas as pd, sys
+X = pd.read_csv('data/processed/X_features.csv')
+y_household = pd.read_csv('data/processed/y_household.csv').squeeze()
+y_logistic  = pd.read_csv('data/processed/y_logistic.csv').squeeze()
+y_facility  = pd.read_csv('data/processed/y_facility.csv').squeeze()
+sys.path.insert(0, '..')
+from src.preprocessing.split_scale import split_and_scale
+ 
+X_tr_hh, X_te_hh, y_tr_hh, y_te_hh, sc_hh = split_and_scale(pd.concat([X, y_household], axis=1), 'target_household')
+5.2 Model 1 — Logistic Regression  [Owner: PBC]
+Parameter
+v4 (707 rows)
+v5 (724,115 rows)
+Reason
+solver
+lbfgs
+lbfgs (or 'saga' if slow)
+saga scales better on very large N
+C
+0.1 (tuned, strong reg.)
+1.0 (tuned over wider range)
+Large N needs far less regularisation
+class_weight
+None (balanced by construction)
+'balanced'
+Real imbalance is back
+max_iter
+500
+1000
+saga/large-N convergence needs more iterations
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import GridSearchCV
+ 
+def train_logistic(X_train, y_train, feature_names, target_name):
+    param_grid = {'C': [0.1, 1.0, 10.0, 100.0]}
+    base = LogisticRegression(solver='lbfgs', max_iter=1000, class_weight='balanced', random_state=42)
+    grid = GridSearchCV(base, param_grid, cv=5, scoring='roc_auc', n_jobs=-1)
+    grid.fit(X_train, y_train)
+    model = grid.best_estimator_
+    print(f'Best C for {target_name}: {grid.best_params_}')
+    return model
+5.3 Model 2 — Decision Tree  [Owner: RBM]
+Parameter
+v4 (707 rows)
+v5 (724,115 rows)
+Reason
+max_depth
+3–4
+6–10 (tuned)
+Much more data supports deeper, still-generalising trees
+min_samples_split
+20
+500–1000
+Scale threshold with N to keep splits meaningful
+min_samples_leaf
+10
+200–500
+Prevents leaves fit to noise at this scale
+class_weight
+None
+'balanced'
+Real imbalance restored
+5.4 Model 3 — Random Forest  [Owner: Parvati]
+Parameter
+v4 (707 rows)
+v5 (724,115 rows)
+Reason
+n_estimators
+200
+300–500
+More trees stabilise variance at this scale
+max_depth
+5–8
+10–20 (tuned)
+Large N tolerates deeper trees
+min_samples_leaf
+5
+50–100
+Scale threshold with N
+class_weight
+None
+'balanced'
+Real imbalance restored
+n_jobs
+-1
+-1 (essential — this will be slow otherwise)
+Parallelism now critical at 724K rows
+5.5 Model 4 — XGBoost  [Owner: Sharmila]
+Parameter
+v4 (707 rows)
+v5 (724,115 rows)
+Reason
+n_estimators
+100–200
+300–500
+Larger N benefits from more boosting rounds
+max_depth
+3–4
+5–7 (tuned)
+Deeper trees tolerable with abundant data
+reg_alpha / reg_lambda
+0.1 / 1.0 (heavy)
+0.0–0.1 / 1.0 (lighter)
+Overfitting risk much lower at this N
+scale_pos_weight
+not used (balanced by construction)
+neg/pos ratio, computed per target
+Restores standard XGBoost imbalance handling
+tree_method
+auto
+'hist'
+Histogram method is required for tractable training at 700K+ rows
+from xgboost import XGBClassifier
+ 
+def train_xgboost(X_train, y_train, target_name):
+    neg, pos = (y_train == 0).sum(), (y_train == 1).sum()
+    scale_pos_weight = neg / pos
+    model = XGBClassifier(
+        n_estimators=400, max_depth=6, learning_rate=0.08,
+        subsample=0.8, colsample_bytree=0.8,
+        scale_pos_weight=scale_pos_weight, tree_method='hist',
+        eval_metric='auc', random_state=42)
+    model.fit(X_train, y_train)
+    return model
+SECTION 6  —  MODEL EVALUATION
+6. Evaluation — What Changes
+Metric definitions (Accuracy, ROC-AUC, Precision, Recall, F1) are unchanged from v4. Two things change:
+Accuracy is no longer a trustworthy headline number by itself — classes are imbalanced again, so a model predicting the majority class everywhere can still score well on accuracy. Lead with ROC-AUC and F1, exactly as the base paper does with its AOR + significance framing.
+The hold-out test set is now ~145,000 rows instead of ~142. Single-split metrics are no longer noisy — 5-fold CV is still good practice for robustness, but v4's repeated warnings about CV being the primary measure because the hold-out set is "too small" no longer apply. Report the hold-out test score as the primary number; CV mean ± std as a stability check.
+SECTION 7  —  DEPENDENCY TABLE & TEAM ASSIGNMENTS
+7. Dependencies
+Unchanged from v4 — notebooks 02–05 remain independent of each other once 01_preprocessing.ipynb is complete; 06_stage1_model_compare.ipynb still needs all four done first. The only difference is that 01_preprocessing.ipynb is now a bigger, slower gate (724K rows vs 707), so PBC should budget more calendar time for it and share intermediate row counts with the team rather than only the final confirmation.
+SECTION 8  —  QUICK-START CHECKLIST
+8. What To Do Right Now
+#
+Action
+Owner
+1
+Confirm v467f and v467i can be pulled from IAIR7EFL.DTA; re-run Step 1 load with the full 8-column barrier set
+PBC
+2
+Decide and document the analytic sample rule (full 724,115 vs a filtered subgroup) — see Section 0.2
+PBC
+3
+Rewrite src/preprocessing/*.py per Sections 2–3 of this guide; retire the v4 district-level versions
+PBC
+4
+Run 01_preprocessing.ipynb end-to-end; confirm target prevalences are NOT ~50% and post them to the team
+PBC
+5
+Update src/evaluation/metrics.py — no logic change needed, but re-confirm imbalanced-friendly framing (Section 6)
+RBM
+6
+Rebuild src/models/*.py hyperparameters per Section 5's tables
+PBC / RBM / Parvati / Sharmila
+7
+Re-run notebooks 02–06 on the new pipeline
+All
+8
+Once confirmed, retire Stage1_Implementation_Guide_v4_updated.docx and the Stage2 guide's district-level assumptions (they will need a matching v2 rebuild)
+All
+NOTE ON STAGE 2:
+Stage2_Implementation_Guide_v1.docx was built entirely on the district-level dataset (OOF barrier probabilities from district-level Stage 1 models, district-level clustering features, district-level Stage 2 targets). Once this v5 Stage 1 rebuild is confirmed and running, Stage 2 will need its own rebuild on individual-level data — flag this to the team now so it isn't a surprise later.
+— END OF DOCUMENT —
+WHCARP Project P48 · BarrierLens Stage 1 Implementation Guide v5 · July 2026
