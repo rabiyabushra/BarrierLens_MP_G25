@@ -6,7 +6,14 @@
 [![License: Academic Research](https://img.shields.io/badge/Project-Major%20Project%20G25%20(P48)-purple.svg)]()
 
 > **BarrierLens** is an end-to-end machine learning research platform and decision-support dashboard designed to identify, predict, and interpret sociodemographic barriers to women's healthcare access across India. Grounded in the National Family Health Survey (NFHS-5, 2019–21) individual-level dataset of **724,115 women**, the platform models three core barrier domains, estimates downstream health outcome impacts, clusters vulnerability archetypes, and provides an explainable AI dashboard paired with a stateful, multilingual research assistant.
+> 
+**Live Deployment**
 
+Frontend / Live Dashboard:
+https://barrierlens-mp-g25.onrender.com
+
+GitHub Repository:
+https://github.com/rabiyabushra/BarrierLens_MP_G25
 ---
 
 ## Table of Contents
